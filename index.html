@@ -6,56 +6,32 @@
 <title>My Memories</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #f5f5f5;
-}
+body { font-family: Arial; background:#f5f5f5; margin:0; }
+header { background:#ff5e78; color:white; text-align:center; padding:15px; }
+.container { padding:15px; }
 
-header {
-    background: #ff5e78;
-    color: white;
-    text-align: center;
-    padding: 20px;
-}
-
-h1 {
-    margin: 0;
-}
-
-.container {
-    padding: 15px;
+button {
+    padding:10px;
+    margin:5px 0;
+    border:none;
+    background:#ff5e78;
+    color:white;
+    border-radius:8px;
 }
 
 .album {
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.album h2 {
-    margin-bottom: 10px;
-}
-
-.gallery {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
+    background:white;
+    padding:10px;
+    border-radius:10px;
+    margin-top:10px;
 }
 
 .gallery img {
-    width: 200px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-footer {
-    text-align: center;
-    padding: 10px;
-    color: gray;
+    width:100px;
+    height:100px;
+    object-fit:cover;
+    margin:5px;
+    border-radius:8px;
 }
 </style>
 </head>
@@ -63,46 +39,80 @@ footer {
 <body>
 
 <header>
-    <h1>📸 My Life Memories</h1>
-    <p>Family • Friends • Travels</p>
+    <h2>📸 My Memories</h2>
 </header>
 
 <div class="container">
 
-    <!-- Album 1 -->
-    <div class="album">
-        <h2>🎂 Birthday Memories</h2>
-        <div class="gallery">
-            <img src="photo1.jpg">
-            <img src="photo2.jpg">
-            <img src="photo3.jpg">
-        </div>
-    </div>
+    <input type="text" id="albumName" placeholder="Enter Album Name">
+    <button onclick="createAlbum()">Create Album</button>
 
-    <!-- Album 2 -->
-    <div class="album">
-        <h2>✈️ Travel Memories</h2>
-        <div class="gallery">
-            <img src="travel1.jpg">
-            <img src="travel2.jpg">
-            <img src="travel3.jpg">
-        </div>
-    </div>
+    <br><br>
 
-    <!-- Album 3 -->
-    <div class="album">
-        <h2>👨‍👩‍👧 Family Moments</h2>
-        <div class="gallery">
-            <img src="family1.jpg">
-            <img src="family2.jpg">
-        </div>
-    </div>
+    <input type="file" id="photoInput">
+    <button onclick="uploadPhoto()">Upload Photo</button>
+
+    <div id="albums"></div>
 
 </div>
 
-<footer>
-    ❤️ Made with memories
-</footer>
+<script>
+let albums = JSON.parse(localStorage.getItem("albums")) || {};
+
+function saveData(){
+    localStorage.setItem("albums", JSON.stringify(albums));
+}
+
+function createAlbum(){
+    let name = document.getElementById("albumName").value;
+    if(!name) return alert("Enter album name");
+
+    if(!albums[name]) albums[name] = [];
+
+    saveData();
+    displayAlbums();
+}
+
+function uploadPhoto(){
+    let file = document.getElementById("photoInput").files[0];
+    if(!file) return alert("Select photo");
+
+    let reader = new FileReader();
+    reader.onload = function(e){
+        let album = prompt("Enter album name to save photo:");
+
+        if(!albums[album]) albums[album] = [];
+
+        albums[album].push(e.target.result);
+        saveData();
+        displayAlbums();
+    }
+    reader.readAsDataURL(file);
+}
+
+function displayAlbums(){
+    let container = document.getElementById("albums");
+    container.innerHTML = "";
+
+    for(let name in albums){
+        let div = document.createElement("div");
+        div.className = "album";
+
+        let html = `<h3>${name}</h3><div class="gallery">`;
+
+        albums[name].forEach(img=>{
+            html += `<img src="${img}">`;
+        });
+
+        html += `</div>`;
+        div.innerHTML = html;
+
+        container.appendChild(div);
+    }
+}
+
+displayAlbums();
+</script>
 
 </body>
 </html>
