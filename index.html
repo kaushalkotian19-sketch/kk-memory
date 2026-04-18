@@ -1,94 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Memories</title>
 
 <style>
 body {
+    margin:0;
     font-family: Arial;
-    margin: 0;
-    background: #f5f5f5;
-}
-
-header {
-    background: #ff5e78;
+    background: radial-gradient(circle at top, #1a0033, #000);
     color: white;
-    text-align: center;
-    padding: 15px;
 }
 
-.container {
-    padding: 15px;
+/* LOGIN SCREEN */
+#login {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
 }
 
 input, button {
-    padding: 10px;
-    margin: 5px 0;
-    width: 100%;
-    border-radius: 8px;
-    border: none;
+    padding:12px;
+    margin:8px;
+    border:none;
+    border-radius:10px;
+    width:250px;
 }
 
 button {
-    background: #ff5e78;
-    color: white;
-    font-weight: bold;
+    background: linear-gradient(45deg, #ff00cc, #3333ff);
+    color:white;
+    font-weight:bold;
 }
+
+/* MAIN UI */
+header {
+    text-align:center;
+    padding:15px;
+    font-size:20px;
+    color:#ff66ff;
+    text-shadow:0 0 10px #ff00ff;
+}
+
+.container { padding:15px; }
 
 .album {
-    background: white;
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 15px;
+    background: rgba(255,255,255,0.05);
+    padding:10px;
+    border-radius:15px;
+    margin-top:10px;
+    box-shadow:0 0 15px rgba(255,0,255,0.2);
 }
 
-.slideshow {
-    position: relative;
-    width: 100%;
-    max-width: 300px;
+.media {
+    width:100%;
+    border-radius:10px;
+    margin-top:5px;
 }
 
-.slide {
-    display: none;
-    width: 100%;
-    border-radius: 10px;
-}
-
-.active {
-    display: block;
-}
+.hidden { display:none; }
 </style>
 </head>
 
 <body>
 
-<header>
-    <h2>📸 My Memories</h2>
-    <p>Family • Friends • Travel</p>
-</header>
+<!-- LOGIN -->
+<div id="login">
+    <h2>🔐 Enter Password</h2>
+    <input type="password" id="pass" placeholder="Enter password">
+    <button onclick="checkPass()">Unlock</button>
+</div>
+
+<!-- MAIN -->
+<div id="app" class="hidden">
+
+<header>📸 My Private Memories</header>
 
 <div class="container">
 
-    <input type="text" id="albumName" placeholder="Enter Album Name">
-    <button onclick="createAlbum()">Create Album</button>
+<input type="text" id="albumName" placeholder="Album Name">
+<button onclick="createAlbum()">Create Album</button>
 
-    <input type="text" id="imageURL" placeholder="Paste Image URL">
-    <button onclick="addImage()">Add Image</button>
+<input type="file" id="fileInput">
+<button onclick="uploadFile()">Upload Photo / Video</button>
 
-    <div id="albums"></div>
+<div id="albums"></div>
+
+</div>
 
 </div>
 
 <script>
 
+/* 🔐 PASSWORD */
+let PASSWORD = "1234"; // change this
+
+function checkPass(){
+    let input = document.getElementById("pass").value;
+    if(input === PASSWORD){
+        document.getElementById("login").style.display="none";
+        document.getElementById("app").classList.remove("hidden");
+    } else {
+        alert("Wrong password");
+    }
+}
+
+/* ☁️ CLOUDINARY */
+let CLOUD_NAME = "YOUR_CLOUD_NAME";
+let UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+
+/* STORAGE */
 let albums = JSON.parse(localStorage.getItem("albums")) || {};
 
 function saveData(){
     localStorage.setItem("albums", JSON.stringify(albums));
 }
 
+/* CREATE ALBUM */
 function createAlbum(){
     let name = document.getElementById("albumName").value;
     if(!name) return alert("Enter album name");
@@ -99,60 +129,56 @@ function createAlbum(){
     displayAlbums();
 }
 
-function addImage(){
-    let url = document.getElementById("imageURL").value;
-    if(!url) return alert("Enter image URL");
+/* UPLOAD */
+async function uploadFile(){
+    let file = document.getElementById("fileInput").files[0];
+    if(!file) return alert("Select file");
 
     let album = prompt("Enter album name:");
-
     if(!albums[album]) albums[album] = [];
 
-    albums[album].push(url);
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+        method: "POST",
+        body: formData
+    });
+
+    let data = await res.json();
+
+    albums[album].push({
+        url: data.secure_url,
+        type: file.type.startsWith("video") ? "video" : "image"
+    });
 
     saveData();
     displayAlbums();
 }
 
+/* DISPLAY */
 function displayAlbums(){
     let container = document.getElementById("albums");
     container.innerHTML = "";
 
     for(let name in albums){
         let div = document.createElement("div");
-        div.className = "album";
+        div.className="album";
 
-        let html = `<h3>${name}</h3><div class="slideshow">`;
+        let html = `<h3>${name}</h3>`;
 
-        albums[name].forEach((img, i) => {
-            html += `<img class="slide ${i===0 ? 'active' : ''}" src="${img}">`;
+        albums[name].forEach(item=>{
+            if(item.type==="video"){
+                html += `<video class="media" controls src="${item.url}"></video>`;
+            } else {
+                html += `<img class="media" src="${item.url}">`;
+            }
         });
 
-        html += `</div>`;
         div.innerHTML = html;
-
         container.appendChild(div);
     }
-
-    startSlides();
-}
-
-function startSlides(){
-    setInterval(() => {
-        document.querySelectorAll(".slideshow").forEach(slideshow => {
-            let slides = slideshow.querySelectorAll(".slide");
-            let activeIndex = 0;
-
-            slides.forEach((s, i) => {
-                if (s.classList.contains("active")) {
-                    s.classList.remove("active");
-                    activeIndex = i;
-                }
-            });
-
-            let next = (activeIndex + 1) % slides.length;
-            slides[next].classList.add("active");
-        });
-    }, 2500);
 }
 
 displayAlbums();
