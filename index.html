@@ -1,1 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Memories</title>
 
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+header {
+    background: #ff5e78;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+h1 {
+    margin: 0;
+}
+
+.container {
+    padding: 15px;
+}
+
+.album {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.album h2 {
+    margin-bottom: 10px;
+}
+
+.gallery {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+}
+
+.gallery img {
+    width: 200px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    color: gray;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>📸 My Life Memories</h1>
+    <p>Family • Friends • Travels</p>
+</header>
+
+<div class="container">
+
+    <!-- Album 1 -->
+    <div class="album">
+        <h2>🎂 Birthday Memories</h2>
+        <div class="gallery">
+            <img src="photo1.jpg">
+            <img src="photo2.jpg">
+            <img src="photo3.jpg">
+        </div>
+    </div>
+
+    <!-- Album 2 -->
+    <div class="album">
+        <h2>✈️ Travel Memories</h2>
+        <div class="gallery">
+            <img src="travel1.jpg">
+            <img src="travel2.jpg">
+            <img src="travel3.jpg">
+        </div>
+    </div>
+
+    <!-- Album 3 -->
+    <div class="album">
+        <h2>👨‍👩‍👧 Family Moments</h2>
+        <div class="gallery">
+            <img src="family1.jpg">
+            <img src="family2.jpg">
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    ❤️ Made with memories
+</footer>
+
+</body>
+</html>
