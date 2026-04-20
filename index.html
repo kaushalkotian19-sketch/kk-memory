@@ -49,7 +49,6 @@
 
         .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 20px; }
         
-        /* Modern Inputs */
         input {
             width: 100%;
             margin: 8px 0;
@@ -60,10 +59,10 @@
             background: var(--card-bg);
             color: white;
             transition: all 0.3s ease;
-            font-size: 16px; /* Prevents iOS zoom on focus */
+            font-size: 16px;
         }
 
-        input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(255,0,204,0.2); }
+        input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.1); }
 
         .upload-area {
             background: var(--card-bg);
@@ -83,13 +82,12 @@
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
+            transition: transform 0.2s;
         }
 
-        button:active { transform: scale(0.97); filter: brightness(1.1); }
-        button:disabled { opacity: 0.5; filter: grayscale(1); }
+        button:active { transform: scale(0.97); }
+        button:disabled { opacity: 0.5; cursor: wait; }
 
-        /* Grid System */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -102,10 +100,8 @@
             border: 1px solid var(--glass-border);
             border-radius: 18px;
             padding: 12px;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.3s;
         }
-
-        .album-card:hover { border-color: var(--primary); transform: translateY(-4px); }
 
         .thumb-container {
             width: 100%;
@@ -117,30 +113,27 @@
             justify-content: center;
             margin-bottom: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
         
-        .album-card h3 { margin: 0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .album-card h3 { margin: 0; font-size: 0.95rem; }
         .album-card p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-dim); }
 
         .action-btns { display: flex; gap: 8px; margin-top: 12px; }
-        .action-btns button { padding: 10px; margin: 0; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
+        .action-btns button { padding: 10px; margin: 0; font-size: 0.85rem; background: rgba(255,255,255,0.05); }
 
-        /* Photo View */
         .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; border: 1px solid var(--glass-border); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        
         .del-btn {
             position: absolute; top: 8px; right: 8px;
             background: rgba(255,50,50,0.9); width: 28px; height: 28px; 
-            padding: 0; border-radius: 50%; font-size: 18px; line-height: 1;
+            padding: 0; border-radius: 50%; border: none; color: white;
         }
 
-        /* Lock Screen */
         #lockScreen {
-            position: fixed; inset: 0;
-            background: var(--bg); z-index: 1000;
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
     </style>
@@ -152,7 +145,7 @@
     <div style="font-size: 3rem; margin-bottom: 20px;">🔐</div>
     <h2 style="font-weight: 400; margin-bottom: 30px;">Personal Vault</h2>
     <div style="width: 85%; max-width: 320px;">
-        <input id="pass" type="password" placeholder="Enter PIN" style="text-align: center; font-size: 1.2rem; letter-spacing: 4px;">
+        <input id="pass" type="password" placeholder="Enter PIN" style="text-align: center; letter-spacing: 4px;">
         <button onclick="unlock()">Access Gallery</button>
     </div>
 </div>
@@ -219,11 +212,19 @@
                     method: "POST",
                     body: formData
                 });
+                
+                if (!res.ok) throw new Error('Network response was not ok');
                 let data = await res.json();
                 
-                // ADDED: Square thumbnail optimization and auto-format
-                let thumbUrl = data.secure_url.replace('/upload/', '/upload/w_400,h_400,c_fill,g_auto,q_auto,f_auto/');
-                let fullUrl = data.secure_url.replace('/upload/', '/upload/q_auto,f_auto/');
+                // SAFER URL LOGIC: Only transform if it's a standard Cloudinary upload URL
+                let rawUrl = data.secure_url;
+                let thumbUrl = rawUrl;
+                let fullUrl = rawUrl;
+
+                if (rawUrl.includes('/upload/')) {
+                    thumbUrl = rawUrl.replace('/upload/', '/upload/w_400,h_400,c_fill,g_auto,q_auto,f_auto/');
+                    fullUrl = rawUrl.replace('/upload/', '/upload/q_auto,f_auto/');
+                }
 
                 let manual = document.getElementById("albumName").value;
                 let albumKey = manual ? manual : detectAI(file.name);
@@ -232,6 +233,7 @@
                 albums[albumKey].items.unshift({ url: fullUrl, thumb: thumbUrl, name: file.name });
             } catch (e) {
                 console.error("Cloudinary Error:", e);
+                alert("Upload failed for: " + file.name);
             }
         }
 
@@ -250,7 +252,7 @@
 
         const keys = Object.keys(albums);
         if (keys.length === 0) {
-            html = '<p style="text-align:center; color:#666; margin-top:40px;">No albums yet. Upload some memories!</p>';
+            html = '<p style="text-align:center; color:#666; margin-top:40px;">No albums yet.</p>';
         } else {
             for (let name in albums) {
                 let items = albums[name].items;
@@ -264,7 +266,7 @@
                     <div class="album-card">
                         <div onclick="openAlbum('${name}')">
                             <div class="thumb-container">
-                                ${cover ? `<img src="${cover.thumb}" loading="lazy">` : `📁`}
+                                ${cover ? `<img src="${cover.thumb}" loading="lazy" onerror="this.src='https://placehold.co/400x400/111/white?text=Error'">` : `📁`}
                             </div>
                             <h3>${name}</h3>
                             <p>${items.length} photos</p>
@@ -283,7 +285,7 @@
     function openAlbum(name) {
         let div = document.getElementById("albums");
         let html = `
-            <div style="animation: fadeIn 0.3s ease;">
+            <div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <button onclick="display()" style="width:auto; padding:10px 20px; background:rgba(255,255,255,0.1)">Back</button>
                     <h2 style="margin:0; font-size:1.2rem;">${name}</h2>
@@ -293,7 +295,7 @@
         albums[name].items.forEach((item, i) => {
             html += `
                 <div class="photo-item">
-                    <img src="${item.thumb}" onclick="window.open('${item.url}', '_blank')">
+                    <img src="${item.thumb}" onclick="window.open('${item.url}', '_blank')" onerror="this.src='https://placehold.co/400x400/111/white?text=Broken'">
                     <button class="del-btn" onclick="deleteItem('${name}',${i})">×</button>
                 </div>`;
         });
