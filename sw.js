@@ -1,4 +1,4 @@
-const CACHE_NAME = 'memories-v2';
+const CACHE_NAME = 'memories-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,7 +6,6 @@ const ASSETS = [
   '/manifest.json'
 ];
 
-// Install: Cache core assets
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -16,7 +15,6 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// Activate: Cleanup old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => {
@@ -27,8 +25,10 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: Serve from cache, fallback to network
 self.addEventListener('fetch', e => {
+  // Only cache GET requests (prevents issues with Cloudinary POST uploads)
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
     caches.match(e.request).then(response => {
       return response || fetch(e.request);
