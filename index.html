@@ -2,12 +2,15 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>My Memories</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
 body {
     margin: 0;
-    font-family: Arial;
+    font-family: 'Poppins', sans-serif;
     background: radial-gradient(circle at top, #1a0033, #000);
     color: white;
 }
@@ -17,7 +20,7 @@ h1 {
     text-align: center;
     padding: 15px;
     color: #ff4dff;
-    text-shadow: 0 0 15px #ff00ff;
+    text-shadow: 0 0 20px #ff00ff;
 }
 
 /* INPUT */
@@ -26,8 +29,10 @@ input {
     margin: 8px auto;
     display: block;
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
+    background: #1a1a1a;
+    color: white;
 }
 
 /* BUTTON */
@@ -36,36 +41,66 @@ button {
     margin: 8px auto;
     display: block;
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
     font-weight: bold;
     background: linear-gradient(90deg, #ff00cc, #3333ff);
     color: white;
+    box-shadow: 0 0 10px #ff00cc;
 }
 
 /* GRID */
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 10px;
+    gap: 12px;
+    padding: 12px;
 }
 
+/* ALBUM CARD */
 .albumCard {
-    padding: 10px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 0 10px #ff00cc;
+    position: relative;
+    height: 160px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #111;
+    box-shadow: 0 0 15px #ff00cc;
 }
 
 .cover {
     width: 100%;
-    height: 120px;
+    height: 100%;
     object-fit: cover;
-    border-radius: 10px;
 }
 
+/* OVERLAY */
+.overlay {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 8px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+}
+
+.overlay h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.overlay p {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* EMPTY */
+.empty {
+    text-align: center;
+    opacity: 0.5;
+    padding: 40px 0;
+}
+
+/* MEDIA */
 .media {
     width: 100%;
     margin-top: 10px;
@@ -74,10 +109,9 @@ button {
 
 .deleteBtn {
     background: red;
-    padding: 8px;
 }
 
-/* FULL SCREEN VIEWER */
+/* VIEWER */
 #viewer {
     position: fixed;
     top:0;
@@ -98,12 +132,12 @@ button {
 <h1>📸 My Memories</h1>
 
 <input id="search" placeholder="Search album..." oninput="displayAlbums()">
-
 <input id="albumName" placeholder="Album Name">
+
 <button onclick="createAlbum()">Create Album</button>
 
 <input type="file" id="fileInput">
-<button onclick="uploadFile()">Upload</button>
+<button onclick="uploadFile(this)">Upload</button>
 
 <div id="albums"></div>
 
@@ -114,9 +148,11 @@ let CLOUD_NAME = "dzfssbg4j";
 let UPLOAD_PRESET = "memories_upload";
 
 let albums = JSON.parse(localStorage.getItem("albums")) || {};
-let currentAlbum = null;
 let lockedAlbums = JSON.parse(localStorage.getItem("locked")) || {};
 
+let currentAlbum = null;
+
+/* SAVE */
 function saveData(){
     localStorage.setItem("albums", JSON.stringify(albums));
     localStorage.setItem("locked", JSON.stringify(lockedAlbums));
@@ -129,15 +165,18 @@ function createAlbum(){
 
     if(!albums[name]){
         albums[name] = [];
-        displayAlbums();
         saveData();
+        displayAlbums();
     }
 }
 
 /* UPLOAD */
-async function uploadFile(){
+async function uploadFile(btn){
     let file = document.getElementById("fileInput").files[0];
     if(!file) return;
+
+    btn.innerText = "Uploading...";
+    btn.disabled = true;
 
     let formData = new FormData();
     formData.append("file", file);
@@ -161,9 +200,12 @@ async function uploadFile(){
 
     saveData();
     displayAlbums();
+
+    btn.innerText = "Upload";
+    btn.disabled = false;
 }
 
-/* DISPLAY ALBUMS */
+/* DISPLAY */
 function displayAlbums(){
     let search = document.getElementById("search").value.toLowerCase();
     let container = document.getElementById("albums");
@@ -178,14 +220,21 @@ function displayAlbums(){
     for(let name in albums){
         if(!name.toLowerCase().includes(search)) continue;
 
-        let cover = albums[name][0]?.url || "";
+        let cover = albums[name][0]?.url;
 
         html += `
         <div class="albumCard" onclick="openAlbum('${name}')">
-            ${cover ? `<img class="cover" src="${cover}">` : ""}
-            <h3>${name}</h3>
-            <p>${albums[name].length} items</p>
-            ${lockedAlbums[name] ? "🔒 Locked" : ""}
+
+            ${cover 
+                ? `<img class="cover" src="${cover}">`
+                : `<div class="empty">📂<br>No Memories</div>`
+            }
+
+            <div class="overlay">
+                <h3>${name}</h3>
+                <p>${albums[name].length} items ${lockedAlbums[name] ? "🔒" : ""}</p>
+            </div>
+
         </div>`;
     }
 
@@ -204,7 +253,7 @@ function openAlbum(name){
     showAlbum(name);
 }
 
-/* SHOW ALBUM */
+/* SHOW */
 function showAlbum(name){
     let container = document.getElementById("albums");
 
@@ -214,14 +263,14 @@ function showAlbum(name){
     <h2>${name}</h2>
     `;
 
-    albums[name].forEach((item, index)=>{
+    albums[name].forEach((item, i)=>{
         if(item.type === "image"){
-            html += `<img class="media" src="${item.url}" onclick="openViewer('${name}', ${index})">`;
+            html += `<img class="media" src="${item.url}" onclick="openViewer('${name}', ${i})">`;
         } else {
             html += `<video class="media" src="${item.url}" controls></video>`;
         }
 
-        html += `<button class="deleteBtn" onclick="deleteItem('${name}', ${index})">Delete</button>`;
+        html += `<button class="deleteBtn" onclick="deleteItem('${name}', ${i})">Delete</button>`;
     });
 
     container.innerHTML = html;
@@ -250,7 +299,7 @@ function goBack(){
     displayAlbums();
 }
 
-/* VIEWER (SWIPE) */
+/* VIEWER */
 let viewIndex = 0;
 let viewAlbum = "";
 
@@ -258,21 +307,19 @@ function openViewer(album, index){
     viewAlbum = album;
     viewIndex = index;
 
-    let viewer = document.getElementById("viewer");
-    viewer.style.display = "flex";
-
+    document.getElementById("viewer").style.display = "flex";
     showViewer();
 }
 
 function showViewer(){
     let item = albums[viewAlbum][viewIndex];
 
-    let viewer = document.getElementById("viewer");
-
     if(item.type === "image"){
-        viewer.innerHTML = `<img src="${item.url}" style="max-width:90%">`;
+        document.getElementById("viewer").innerHTML =
+            `<img src="${item.url}" style="max-width:90%">`;
     } else {
-        viewer.innerHTML = `<video src="${item.url}" controls autoplay style="max-width:90%"></video>`;
+        document.getElementById("viewer").innerHTML =
+            `<video src="${item.url}" controls autoplay style="max-width:90%"></video>`;
     }
 }
 
