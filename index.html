@@ -4,9 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Memories</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ff00cc">
-
 <style>
 body {
     margin: 0;
@@ -15,26 +12,10 @@ body {
     color: white;
 }
 
-/* SPLASH */
-#splash {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-#splash h1 {
-    color: #ff00cc;
-    text-shadow: 0 0 20px #ff00cc;
-}
-
 /* HEADER */
 h1 {
     text-align: center;
-    padding: 20px;
+    padding: 15px;
     color: #ff4dff;
     text-shadow: 0 0 15px #ff00ff;
 }
@@ -42,102 +23,121 @@ h1 {
 /* INPUT */
 input {
     width: 90%;
-    margin: 10px auto;
+    margin: 8px auto;
     display: block;
-    padding: 15px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: 10px;
     border: none;
 }
 
 /* BUTTON */
 button {
     width: 90%;
-    margin: 10px auto;
+    margin: 8px auto;
     display: block;
-    padding: 15px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: 10px;
     border: none;
     font-weight: bold;
     background: linear-gradient(90deg, #ff00cc, #3333ff);
     color: white;
-    box-shadow: 0 0 15px #ff00cc;
 }
 
-/* ALBUM */
-.album {
-    margin: 15px;
-    padding: 15px;
-    border-radius: 15px;
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 10px;
+}
+
+.albumCard {
+    padding: 10px;
     background: rgba(255,255,255,0.05);
-    box-shadow: 0 0 20px rgba(255,0,255,0.3);
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 0 10px #ff00cc;
+}
+
+.cover {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
 }
 
 .media {
     width: 100%;
-    border-radius: 10px;
     margin-top: 10px;
+    border-radius: 10px;
 }
 
 .deleteBtn {
     background: red;
     padding: 8px;
-    margin-top: 5px;
-    font-size: 12px;
+}
+
+/* FULL SCREEN VIEWER */
+#viewer {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:black;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
 }
 </style>
 </head>
 
 <body>
 
-<!-- SPLASH (click to skip also) -->
-<div id="splash" onclick="this.style.display='none'">
-    <h1>📸 Memories</h1>
-</div>
+<h1>📸 My Memories</h1>
 
-<h1>📸 My Private Memories</h1>
+<input id="search" placeholder="Search album..." oninput="displayAlbums()">
 
 <input id="albumName" placeholder="Album Name">
 <button onclick="createAlbum()">Create Album</button>
 
 <input type="file" id="fileInput">
-<button onclick="uploadFile()">Upload Photo / Video</button>
+<button onclick="uploadFile()">Upload</button>
 
 <div id="albums"></div>
+
+<div id="viewer" onclick="closeViewer()"></div>
 
 <script>
 let CLOUD_NAME = "dzfssbg4j";
 let UPLOAD_PRESET = "memories_upload";
 
 let albums = JSON.parse(localStorage.getItem("albums")) || {};
+let currentAlbum = null;
+let lockedAlbums = JSON.parse(localStorage.getItem("locked")) || {};
 
 function saveData(){
     localStorage.setItem("albums", JSON.stringify(albums));
+    localStorage.setItem("locked", JSON.stringify(lockedAlbums));
 }
 
-/* ✅ FIXED SPLASH (IMPORTANT) */
-document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-        let splash = document.getElementById("splash");
-        if (splash) splash.style.display = "none";
-    }, 1200);
-});
-
-/* CREATE ALBUM */
+/* CREATE */
 function createAlbum(){
     let name = document.getElementById("albumName").value;
-    if(!name) return alert("Enter album name");
+    if(!name) return;
 
     if(!albums[name]){
         albums[name] = [];
-        saveData();
         displayAlbums();
+        saveData();
     }
 }
 
 /* UPLOAD */
 async function uploadFile(){
     let file = document.getElementById("fileInput").files[0];
-    if(!file) return alert("Select file");
+    if(!file) return;
 
     let formData = new FormData();
     formData.append("file", file);
@@ -149,11 +149,6 @@ async function uploadFile(){
     });
 
     let data = await res.json();
-
-    if(!data.secure_url){
-        alert("Upload failed");
-        return;
-    }
 
     let album = document.getElementById("albumName").value || "Default";
 
@@ -168,85 +163,29 @@ async function uploadFile(){
     displayAlbums();
 }
 
-/* DELETE */
-function deleteItem(album, index){
-    if(confirm("Delete this item?")){
-        albums[album].splice(index,1);
-        saveData();
-        displayAlbums();
-    }
-}
-
-/* SLIDESHOW */
-function startSlideshow(album){
-    let items = albums[album];
-    if(!items || items.length === 0) return;
-
-    let index = 0;
-
-    let viewer = document.createElement("div");
-    viewer.style = `
-        position:fixed;
-        top:0;
-        left:0;
-        width:100%;
-        height:100%;
-        background:black;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        z-index:9999;
-    `;
-
-    document.body.appendChild(viewer);
-
-    function show(){
-        viewer.innerHTML = "";
-
-        let item = items[index];
-
-        if(item.type === "image"){
-            viewer.innerHTML = `<img src="${item.url}" style="max-width:90%">`;
-        } else {
-            viewer.innerHTML = `<video src="${item.url}" autoplay controls style="max-width:90%"></video>`;
-        }
-
-        index++;
-        if(index >= items.length) index = 0;
-    }
-
-    show();
-    let interval = setInterval(show, 3000);
-
-    viewer.onclick = ()=>{
-        clearInterval(interval);
-        viewer.remove();
-    };
-}
-
-/* DISPLAY */
-let currentAlbum = null;
-
-/* DISPLAY ALBUM LIST (GRID) */
+/* DISPLAY ALBUMS */
 function displayAlbums(){
+    let search = document.getElementById("search").value.toLowerCase();
     let container = document.getElementById("albums");
-    container.innerHTML = "";
 
     if(currentAlbum){
-        displaySingleAlbum(currentAlbum);
+        showAlbum(currentAlbum);
         return;
     }
 
-    let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;">`;
+    let html = `<div class="grid">`;
 
-    for(let album in albums){
+    for(let name in albums){
+        if(!name.toLowerCase().includes(search)) continue;
+
+        let cover = albums[name][0]?.url || "";
+
         html += `
-        <div onclick="openAlbum('${album}')" 
-        style="padding:20px;background:rgba(255,255,255,0.05);
-        border-radius:15px;text-align:center;
-        box-shadow:0 0 15px #ff00cc;">
-            <h3>${album}</h3>
-            <p>${albums[album].length} items</p>
+        <div class="albumCard" onclick="openAlbum('${name}')">
+            ${cover ? `<img class="cover" src="${cover}">` : ""}
+            <h3>${name}</h3>
+            <p>${albums[name].length} items</p>
+            ${lockedAlbums[name] ? "🔒 Locked" : ""}
         </div>`;
     }
 
@@ -254,10 +193,55 @@ function displayAlbums(){
     container.innerHTML = html;
 }
 
-/* OPEN ALBUM */
+/* OPEN */
 function openAlbum(name){
+    if(lockedAlbums[name]){
+        let pass = prompt("Enter password");
+        if(pass !== lockedAlbums[name]) return alert("Wrong password");
+    }
+
     currentAlbum = name;
-    displayAlbums();
+    showAlbum(name);
+}
+
+/* SHOW ALBUM */
+function showAlbum(name){
+    let container = document.getElementById("albums");
+
+    let html = `
+    <button onclick="goBack()">⬅ Back</button>
+    <button onclick="lockAlbum('${name}')">🔒 Lock</button>
+    <h2>${name}</h2>
+    `;
+
+    albums[name].forEach((item, index)=>{
+        if(item.type === "image"){
+            html += `<img class="media" src="${item.url}" onclick="openViewer('${name}', ${index})">`;
+        } else {
+            html += `<video class="media" src="${item.url}" controls></video>`;
+        }
+
+        html += `<button class="deleteBtn" onclick="deleteItem('${name}', ${index})">Delete</button>`;
+    });
+
+    container.innerHTML = html;
+}
+
+/* DELETE */
+function deleteItem(name, i){
+    albums[name].splice(i,1);
+    saveData();
+    showAlbum(name);
+}
+
+/* LOCK */
+function lockAlbum(name){
+    let pass = prompt("Set password");
+    if(pass){
+        lockedAlbums[name] = pass;
+        saveData();
+        alert("Locked!");
+    }
 }
 
 /* BACK */
@@ -266,29 +250,61 @@ function goBack(){
     displayAlbums();
 }
 
-/* SHOW SINGLE ALBUM */
-function displaySingleAlbum(album){
-    let container = document.getElementById("albums");
+/* VIEWER (SWIPE) */
+let viewIndex = 0;
+let viewAlbum = "";
 
-    let html = `
-    <button onclick="goBack()">⬅ Back</button>
-    <h2 style="text-align:center">${album}</h2>
-    <button onclick="startSlideshow('${album}')">▶ Slideshow</button>
-    `;
+function openViewer(album, index){
+    viewAlbum = album;
+    viewIndex = index;
 
-    albums[album].forEach((item, index)=>{
-        if(item.type === "image"){
-            html += `<img class="media" src="${item.url}">`;
-        } else {
-            html += `<video class="media" controls src="${item.url}"></video>`;
-        }
+    let viewer = document.getElementById("viewer");
+    viewer.style.display = "flex";
 
-        html += `<button class="deleteBtn" onclick="deleteItem('${album}', ${index})">Delete</button>`;
-    });
-
-    container.innerHTML = html;
+    showViewer();
 }
 
+function showViewer(){
+    let item = albums[viewAlbum][viewIndex];
+
+    let viewer = document.getElementById("viewer");
+
+    if(item.type === "image"){
+        viewer.innerHTML = `<img src="${item.url}" style="max-width:90%">`;
+    } else {
+        viewer.innerHTML = `<video src="${item.url}" controls autoplay style="max-width:90%"></video>`;
+    }
+}
+
+/* SWIPE */
+let startX = 0;
+
+document.getElementById("viewer").addEventListener("touchstart", e=>{
+    startX = e.touches[0].clientX;
+});
+
+document.getElementById("viewer").addEventListener("touchend", e=>{
+    let diff = e.changedTouches[0].clientX - startX;
+
+    if(diff > 50) prev();
+    if(diff < -50) next();
+});
+
+function next(){
+    viewIndex++;
+    if(viewIndex >= albums[viewAlbum].length) viewIndex = 0;
+    showViewer();
+}
+
+function prev(){
+    viewIndex--;
+    if(viewIndex < 0) viewIndex = albums[viewAlbum].length-1;
+    showViewer();
+}
+
+function closeViewer(){
+    document.getElementById("viewer").style.display = "none";
+}
 
 displayAlbums();
 </script>
