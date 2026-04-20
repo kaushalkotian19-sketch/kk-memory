@@ -4,285 +4,180 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Memories</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
 <style>
-body {
-    margin:0;
-    font-family:'Poppins',sans-serif;
-    background: radial-gradient(circle at top, #1a0033, #000);
-    color:white;
+body {margin:0;font-family:sans-serif;background:#0a001a;color:white;}
+h1{text-align:center;}
+
+input,button{
+width:90%;margin:8px auto;display:block;padding:10px;border-radius:10px;border:none;
 }
 
-/* LOCK SCREEN */
-#lockScreen {
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:black;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
+button{background:linear-gradient(90deg,#ff00cc,#3333ff);color:white;}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
 }
 
-input, select {
-    width:90%;
-    margin:8px auto;
-    padding:12px;
-    border-radius:10px;
-    border:none;
+.album{
+background:#111;
+padding:10px;
+border-radius:10px;
+text-align:center;
 }
 
-button {
-    width:90%;
-    margin:8px auto;
-    padding:12px;
-    border-radius:10px;
-    border:none;
-    background:linear-gradient(90deg,#ff00cc,#3333ff);
-    color:white;
-    font-weight:bold;
-}
-
-/* GRID */
-.grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-    padding:12px;
-}
-
-.albumCard {
-    height:160px;
-    border-radius:15px;
-    overflow:hidden;
-    background:#111;
-    position:relative;
-    box-shadow:0 0 10px #ff00cc;
-}
-
-.cover {
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-.overlay {
-    position:absolute;
-    bottom:0;
-    width:100%;
-    padding:8px;
-    background:linear-gradient(transparent, black);
-}
-
-.media {
-    width:100%;
-    margin-top:10px;
-    border-radius:10px;
-}
-
-.deleteBtn {
-    background:red;
-}
+img{width:100%;border-radius:10px;}
 </style>
 </head>
 
 <body>
 
-<!-- 🔐 APP LOCK -->
-<div id="lockScreen">
-    <h2>🔐 Enter Password</h2>
-    <input type="password" id="appPass">
-    <button onclick="unlockApp()">Unlock</button>
+<!-- LOCK -->
+<div id="lockScreen" style="position:fixed;width:100%;height:100%;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+<h2>🔐 Enter Password</h2>
+<input id="pass" type="password">
+<button onclick="unlock()">Unlock</button>
 </div>
 
-<h1 style="text-align:center">📸 My Memories</h1>
+<h1>📸 My Memories</h1>
 
-<input id="search" placeholder="Search..." oninput="displayAlbums()">
-<input id="albumName" placeholder="Album Name">
-
-<select id="sortOption" onchange="displayAlbums()">
-<option value="new">Newest</option>
-<option value="old">Oldest</option>
-<option value="size">Most Photos</option>
-</select>
-
+<input id="albumName" placeholder="Album name">
 <button onclick="createAlbum()">Create Album</button>
 
 <input type="file" id="fileInput" multiple>
-<button onclick="uploadFiles(this)">Upload Multiple</button>
+<button onclick="upload()">Upload</button>
 
 <div id="albums"></div>
 
 <script>
-let PASSWORD = "1234";
-
-let CLOUD_NAME = "dzfssbg4j";
-let UPLOAD_PRESET = "memories_upload";
+let PASSWORD="1234";
 
 let albums = JSON.parse(localStorage.getItem("albums")) || {};
-let favorites = JSON.parse(localStorage.getItem("fav")) || {};
 
-let currentAlbum = null;
-
-/* LOCK */
-function unlockApp(){
-    let val = document.getElementById("appPass").value;
-    if(val === PASSWORD){
-        document.getElementById("lockScreen").style.display="none";
-    } else {
-        alert("Wrong password");
-    }
+function save(){
+localStorage.setItem("albums", JSON.stringify(albums));
 }
 
-/* SAVE */
-function saveData(){
-    localStorage.setItem("albums", JSON.stringify(albums));
-    localStorage.setItem("fav", JSON.stringify(favorites));
+/* FIX OLD DATA */
+function fixData(){
+for(let a in albums){
+if(!albums[a].items){
+albums[a]={items:albums[a]};
+}
+}
+save();
+}
+fixData();
+
+/* LOCK */
+function unlock(){
+if(document.getElementById("pass").value===PASSWORD){
+document.getElementById("lockScreen").style.display="none";
+display();
+}else{
+alert("Wrong password");
+}
 }
 
 /* CREATE */
 function createAlbum(){
-    let name = document.getElementById("albumName").value;
-    if(!name) return;
+let name=document.getElementById("albumName").value;
+if(!name) return;
 
-    if(!albums[name]){
-        albums[name] = {items:[], created:Date.now()};
-        saveData();
-        displayAlbums();
-    }
+if(!albums[name]){
+albums[name]={items:[]};
+save();
+display();
+}
 }
 
-/* MULTI UPLOAD */
-async function uploadFiles(btn){
-    let files = document.getElementById("fileInput").files;
-    if(files.length === 0) return;
+/* UPLOAD */
+async function upload(){
+let files=document.getElementById("fileInput").files;
+if(files.length===0) return;
 
-    let album = document.getElementById("albumName").value || "Default";
-    if(!albums[album]) albums[album] = {items:[], created:Date.now()};
+let name=document.getElementById("albumName").value || "Default";
 
-    btn.innerText = "Uploading...";
-    btn.disabled = true;
+if(!albums[name]) albums[name]={items:[]};
 
-    for(let file of files){
-        let formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", UPLOAD_PRESET);
-
-        let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
-            method:"POST",
-            body:formData
-        });
-
-        let data = await res.json();
-
-        albums[album].items.push({
-            type:file.type.startsWith("video")?"video":"image",
-            url:data.secure_url
-        });
-    }
-
-    saveData();
-    displayAlbums();
-
-    btn.innerText = "Upload Multiple";
-    btn.disabled = false;
+for(let f of files){
+let url=URL.createObjectURL(f); // TEMP (works always)
+albums[name].items.push({url});
 }
 
-/* DELETE ALBUM */
-function deleteAlbum(name){
-    if(confirm("Delete album?")){
-        delete albums[name];
-        delete favorites[name];
-        saveData();
-        displayAlbums();
-    }
-}
-
-/* RENAME */
-function renameAlbum(name){
-    let newName = prompt("New name:");
-    if(newName){
-        albums[newName] = albums[name];
-        delete albums[name];
-        saveData();
-        displayAlbums();
-    }
-}
-
-/* FAVORITE */
-function toggleFav(name){
-    favorites[name] = !favorites[name];
-    saveData();
-    displayAlbums();
+save();
+display();
 }
 
 /* DISPLAY */
-function displayAlbums(){
-    let container = document.getElementById("albums");
-    let search = document.getElementById("search").value.toLowerCase();
-    let sort = document.getElementById("sortOption").value;
+function display(){
+let div=document.getElementById("albums");
 
-    let keys = Object.keys(albums);
+let html='<div class="grid">';
 
-    /* SORT */
-    keys.sort((a,b)=>{
-        if(sort==="new") return albums[b].created - albums[a].created;
-        if(sort==="old") return albums[a].created - albums[b].created;
-        if(sort==="size") return albums[b].items.length - albums[a].items.length;
-    });
+for(let name in albums){
+let first=albums[name].items[0];
 
-    /* FAVORITES FIRST */
-    keys.sort((a,b)=> (favorites[b]?1:0) - (favorites[a]?1:0));
+html+=`
+<div class="album">
+<div onclick="openAlbum('${name}')">
+${first?`<img src="${first.url}">`:"No Image"}
+<h3>${name}</h3>
+<p>${albums[name].items.length} items</p>
+</div>
 
-    let html = `<div class="grid">`;
+<button onclick="renameAlbum('${name}')">✏️</button>
+<button onclick="deleteAlbum('${name}')">🗑️</button>
+</div>
+`;
+}
 
-    keys.forEach(name=>{
-        if(!name.toLowerCase().includes(search)) return;
-
-        let cover = albums[name].items[0]?.url;
-
-        html += `
-        <div class="albumCard">
-            <div onclick="openAlbum('${name}')">
-                ${cover ? `<img class="cover" src="${cover}">` : ""}
-            </div>
-
-            <div class="overlay">
-                <b>${name}</b> ${favorites[name]?"⭐":""}
-                <br>${albums[name].items.length} items
-            </div>
-
-            <button onclick="toggleFav('${name}')">⭐</button>
-            <button onclick="renameAlbum('${name}')">✏️</button>
-            <button onclick="deleteAlbum('${name}')">🗑️</button>
-        </div>`;
-    });
-
-    html += `</div>`;
-    container.innerHTML = html;
+html+='</div>';
+div.innerHTML=html;
 }
 
 /* OPEN */
 function openAlbum(name){
-    let container = document.getElementById("albums");
+let div=document.getElementById("albums");
 
-    let html = `<button onclick="displayAlbums()">⬅ Back</button><h2>${name}</h2>`;
+let html=`<button onclick="display()">⬅ Back</button><h2>${name}</h2>`;
 
-    albums[name].items.forEach(item=>{
-        if(item.type==="image"){
-            html += `<img class="media" src="${item.url}">`;
-        } else {
-            html += `<video class="media" src="${item.url}" controls></video>`;
-        }
-    });
+albums[name].items.forEach((item,i)=>{
+html+=`<img src="${item.url}">`;
+html+=`<button onclick="deleteItem('${name}',${i})">Delete</button>`;
+});
 
-    container.innerHTML = html;
+div.innerHTML=html;
 }
 
-displayAlbums();
+/* DELETE */
+function deleteItem(name,i){
+albums[name].items.splice(i,1);
+save();
+openAlbum(name);
+}
+
+/* DELETE ALBUM */
+function deleteAlbum(name){
+if(confirm("Delete album?")){
+delete albums[name];
+save();
+display();
+}
+}
+
+/* RENAME */
+function renameAlbum(name){
+let newName=prompt("New name");
+if(newName){
+albums[newName]=albums[name];
+delete albums[name];
+save();
+display();
+}
+}
 </script>
 
 </body>
