@@ -7,52 +7,64 @@
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
+            /* Default Night Theme */
             --primary: #ff00cc;
             --secondary: #3333ff;
             --bg: #050010;
             --card-bg: rgba(255, 255, 255, 0.06);
             --glass-border: rgba(255, 255, 255, 0.12);
             --text-main: #ffffff;
-            --text-dim: #b0b0b0;
             --accent-glow: transparent;
         }
 
         body {
             margin: 0;
             font-family: 'Inter', -apple-system, sans-serif;
-            background: radial-gradient(circle at top right, var(--accent-glow), var(--bg) 60%);
+            background: radial-gradient(circle at top right, var(--accent-glow), var(--bg) 80%);
             background-attachment: fixed;
             color: var(--text-main);
             padding-bottom: 80px;
-            transition: background 1s ease;
+            transition: all 1.5s ease-in-out;
+            min-height: 100vh;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
 
         .header {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(5, 0, 16, 0.8); backdrop-filter: blur(15px);
+            background: rgba(5, 0, 16, 0.7); backdrop-filter: blur(20px);
             padding: 15px 0; border-bottom: 1px solid var(--glass-border);
             text-align: center;
         }
 
         .header h1 { 
-            margin: 0; font-size: 1.4rem;
+            margin: 0; font-size: 1.4rem; font-weight: 700;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 20px; }
 
-        /* FLASHBACK CARD */
+        /* FLASHBACK & BUTTONS */
         .flashback-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
-            border: 1px solid var(--primary); border-radius: 20px;
-            padding: 15px; margin-bottom: 20px; display: none;
+            background: var(--card-bg); border: 1px solid var(--primary);
+            border-radius: 20px; padding: 15px; margin-bottom: 20px; display: none;
         }
 
-        /* GRID & CARDS */
+        input, select {
+            width: 100%; margin: 8px 0; padding: 14px; box-sizing: border-box;
+            border-radius: 14px; border: 1px solid var(--glass-border);
+            background: var(--card-bg); color: white; font-size: 16px;
+        }
+
+        button {
+            width: 100%; margin: 10px 0; padding: 14px; border-radius: 14px;
+            border: none; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        button:active { transform: scale(0.96); }
+
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px 0; }
         
         .album-card {
@@ -66,33 +78,20 @@
         }
         .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* FAVORITE HEART */
-        .fav-btn {
-            position: absolute; bottom: 8px; right: 8px;
-            background: rgba(0,0,0,0.5); border: none; border-radius: 50%;
-            width: 30px; height: 30px; cursor: pointer; font-size: 14px;
-            color: white; backdrop-filter: blur(5px);
+        /* SLIDESHOW OVERLAY */
+        #slideshowOverlay {
+            position: fixed; inset: 0; background: black; z-index: 2000;
+            display: none; justify-content: center; align-items: center;
         }
-        .fav-btn.active { color: #ff0055; text-shadow: 0 0 10px #ff0055; }
-
-        input {
-            width: 100%; margin: 8px 0; padding: 14px; box-sizing: border-box;
-            border-radius: 14px; border: 1px solid var(--glass-border);
-            background: var(--card-bg); color: white; font-size: 16px;
-        }
-
-        button {
-            width: 100%; margin: 10px 0; padding: 14px; border-radius: 14px;
-            border: none; background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; font-weight: 600; cursor: pointer;
-        }
-
-        .action-btns { display: flex; gap: 8px; margin-top: 10px; }
-        .action-btns button { padding: 8px; margin: 0; background: rgba(255,255,255,0.05); font-size: 12px; border: 1px solid var(--glass-border); }
+        #slideshowImg { max-width: 100%; max-height: 100%; object-fit: contain; transition: opacity 1s ease-in-out; }
+        .close-slideshow { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; border: none; background: none; }
 
         .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; border: 1px solid var(--glass-border); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
         .del-photo { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.6); border: none; color: white; border-radius: 50%; width: 24px; height: 24px; }
+        
+        .fav-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.4); border: none; border-radius: 50%; width: 30px; height: 30px; color: white; }
+        .fav-btn.active { color: #ff0055; }
 
         #lockScreen {
             position: fixed; inset: 0; background: var(--bg); z-index: 1000;
@@ -103,9 +102,14 @@
 <body>
 
 <div id="lockScreen">
-    <h2 style="font-weight: 300; letter-spacing: 2px;">PERSONAL VAULT</h2>
-    <input id="pass" type="password" placeholder="PIN" style="width: 200px; text-align: center; letter-spacing: 5px;">
-    <button onclick="unlock()" style="width: 200px;">Enter</button>
+    <h1 style="margin-bottom: 30px;">🔐</h1>
+    <input id="pass" type="password" placeholder="ENTER PIN" style="width: 200px; text-align: center; letter-spacing: 5px;">
+    <button onclick="unlock()" style="width: 200px;">Access</button>
+</div>
+
+<div id="slideshowOverlay">
+    <button class="close-slideshow" onclick="stopSlideshow()">×</button>
+    <img id="slideshowImg">
 </div>
 
 <div class="header">
@@ -114,14 +118,14 @@
 
 <div class="container">
     <div id="flashback" class="flashback-card fade-in">
-        <p style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--primary); font-weight: bold;">✨ ON THIS DAY</p>
-        <div id="flashback-content" style="display: flex; gap: 10px; align-items: center;"></div>
+        <p style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--primary); font-weight: bold;">✨ FLASHBACK</p>
+        <div id="flashback-content" style="display: flex; gap: 10px;"></div>
     </div>
 
-    <input id="search" placeholder="🔍 Search folders..." oninput="display()">
+    <input id="search" placeholder="🔍 Find a folder..." oninput="display()">
     
     <div class="upload-area">
-        <input id="albumName" placeholder="Album Name (e.g. Vacation)">
+        <input id="albumName" placeholder="Album Name">
         <input type="file" id="fileInput" multiple>
         <button id="uploadBtn" onclick="upload(this)">Cloud Upload</button>
     </div>
@@ -135,165 +139,162 @@
     const UPLOAD_PRESET = "memories_upload";
 
     let albums = JSON.parse(localStorage.getItem("albums")) || {};
+    let slideshowInterval;
 
     function save() { localStorage.setItem("albums", JSON.stringify(albums)); }
+
+    // FEATURE 1: ADAPTIVE THEMES
+    function applyAdaptiveTheme() {
+        const hour = new Date().getHours();
+        const root = document.documentElement.style;
+
+        if (hour >= 5 && hour < 11) { // Morning
+            root.setProperty('--bg', '#100b20');
+            root.setProperty('--primary', '#ff8c00');
+            root.setProperty('--secondary', '#ff0080');
+            root.setProperty('--accent-glow', '#ff8c0033');
+        } else if (hour >= 11 && hour < 17) { // Midday
+            root.setProperty('--bg', '#001a33');
+            root.setProperty('--primary', '#00d2ff');
+            root.setProperty('--secondary', '#3a7bd5');
+            root.setProperty('--accent-glow', '#00d2ff33');
+        } else { // Night
+            root.setProperty('--bg', '#050010');
+            root.setProperty('--primary', '#ff00cc');
+            root.setProperty('--secondary', '#3333ff');
+            root.setProperty('--accent-glow', '#3333ff33');
+        }
+    }
 
     function unlock() {
         if (document.getElementById("pass").value === PASSWORD) {
             document.getElementById("lockScreen").style.display = "none";
+            applyAdaptiveTheme();
             checkFlashbacks();
             display();
-        } else { alert("Access Denied"); }
+        } else { alert("Locked"); }
     }
 
-    // FEATURE 2: FLASHBACK LOGIC
     function checkFlashbacks() {
         const today = new Date();
         const monthDay = `${today.getMonth() + 1}/${today.getDate()}`;
         let matches = [];
-
         for (let name in albums) {
-            albums[name].items.forEach(item => {
-                if (item.date && item.date.includes(monthDay)) {
-                    matches.push(item);
-                }
-            });
+            albums[name].items.forEach(item => { if (item.date && item.date.includes(monthDay)) matches.push(item); });
         }
-
         if (matches.length > 0) {
-            const card = document.getElementById("flashback");
-            const content = document.getElementById("flashback-content");
-            card.style.display = "block";
-            content.innerHTML = matches.slice(0, 3).map(img => `
-                <img src="${img.thumb}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;" onclick="window.open('${img.url}')">
-            `).join('') + `<p style="font-size:0.9rem">Reminisce about today in history...</p>`;
+            document.getElementById("flashback").style.display = "block";
+            document.getElementById("flashback-content").innerHTML = matches.slice(0, 3).map(img => `<img src="${img.thumb}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">`).join('');
         }
     }
 
     async function upload(btn) {
         const files = document.getElementById("fileInput").files;
-        if (files.length === 0) return alert("Select files");
-
-        btn.innerText = "🚀 Storing...";
-        btn.disabled = true;
-        const dateObj = new Date();
-        const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+        if (files.length === 0) return;
+        btn.innerText = "🚀 Uploading...";
+        const dateStr = `${new Date().getMonth() + 1}/${new Date().getDate()}/${new Date().getFullYear()}`;
 
         for (let file of files) {
             let formData = new FormData();
             formData.append("file", file);
             formData.append("upload_preset", UPLOAD_PRESET);
-
             try {
                 let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
                 let data = await res.json();
-                
                 let rawUrl = data.secure_url;
                 let thumbUrl = rawUrl.replace('/upload/', '/upload/w_500,h_500,c_fill,g_auto,q_auto,f_auto/');
-                
                 let manual = document.getElementById("albumName").value || "General";
                 if (!albums[manual]) albums[manual] = { items: [] };
-                
-                albums[manual].items.unshift({ 
-                    url: rawUrl, thumb: thumbUrl, 
-                    name: file.name, date: dateStr, fav: false 
-                });
+                albums[manual].items.unshift({ url: rawUrl, thumb: thumbUrl, date: dateStr, fav: false });
             } catch (e) { console.error(e); }
         }
-
-        save();
-        display();
-        btn.innerText = "Cloud Upload"; btn.disabled = false;
-        document.getElementById("fileInput").value = "";
-    }
-
-    // FEATURE 1: VIBRANT DYNAMICS (Color Extraction)
-    function extractColor(imgUrl) {
-        // We use a CSS trick here: the accent glow changes based on the album viewed
-        const colors = ['#ff00cc', '#3333ff', '#00ffcc', '#ffcc00', '#ff5500'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        document.documentElement.style.setProperty('--accent-glow', randomColor + '33');
+        save(); display(); btn.innerText = "Cloud Upload";
     }
 
     function display() {
-        document.documentElement.style.setProperty('--accent-glow', 'transparent');
         let div = document.getElementById("albums");
         let search = document.getElementById("search").value.toLowerCase();
         let html = '<div class="grid fade-in">';
 
-        // FEATURE 3: FAVORITES VIRTUAL ALBUM
+        // Favorites Folder
         let favs = [];
-        for (let name in albums) {
-            albums[name].items.forEach(item => { if(item.fav) favs.push(item); });
-        }
-        if (favs.length > 0) {
-            html += renderAlbumCard("❤️ Favorites", favs, true);
-        }
+        for (let name in albums) { albums[name].items.forEach(i => { if(i.fav) favs.push(i); }); }
+        if (favs.length > 0) html += renderCard("❤️ Favorites", favs, true);
 
         for (let name in albums) {
-            if (name.toLowerCase().includes(search)) {
-                html += renderAlbumCard(name, albums[name].items, false);
-            }
+            if (name.toLowerCase().includes(search)) html += renderCard(name, albums[name].items, false);
         }
         div.innerHTML = html + '</div>';
     }
 
-    function renderAlbumCard(name, items, isFavAlbum) {
-        let cover = items[0] ? items[0].thumb : '';
+    function renderCard(name, items, isFav) {
         return `
             <div class="album-card">
-                <div onclick="openAlbum('${name}', ${isFavAlbum})">
-                    <div class="thumb-container">
-                        <img src="${cover}" onerror="this.src='https://placehold.co/400x400?text=Empty'">
-                    </div>
-                    <h3>${name}</h3>
-                    <p>${items.length} items</p>
+                <div onclick="openAlbum('${name}', ${isFav})">
+                    <div class="thumb-container"><img src="${items[0] ? items[0].thumb : ''}" onerror="this.src='https://placehold.co/400x400?text=Empty'"></div>
+                    <h3>${name}</h3><p>${items.length} items</p>
                 </div>
-                ${!isFavAlbum ? `
-                <div class="action-btns">
-                    <button onclick="renameAlbum('${name}')">✏️</button>
-                    <button onclick="deleteAlbum('${name}')">🗑️</button>
+                ${!isFav ? `<div class="action-btns" style="display:flex; gap:5px; margin-top:8px;">
+                    <button onclick="renameAlbum('${name}')" style="padding:5px">✏️</button>
+                    <button onclick="deleteAlbum('${name}')" style="padding:5px">🗑️</button>
                 </div>` : ''}
             </div>`;
     }
 
-    function openAlbum(name, isFavView) {
-        extractColor(); // Trigger UI change
+    function openAlbum(name, isFav) {
         let div = document.getElementById("albums");
-        let items = isFavView ? [] : albums[name].items;
-        
-        if(isFavView) {
-            for (let n in albums) { albums[n].items.forEach(i => { if(i.fav) items.push(i); }); }
-        }
+        let items = isFav ? [] : albums[name].items;
+        if(isFav) for(let n in albums) albums[n].items.forEach(i => { if(i.fav) items.push(i); });
 
         let html = `<div class="fade-in">
-            <button onclick="display()" style="width:auto; padding:10px 20px; margin-bottom:15px;">⬅ Back</button>
-            <h2 style="text-transform:uppercase; letter-spacing:2px;">${name}</h2><div class="grid">`;
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button onclick="display()" style="width:80px">Back</button>
+                <button onclick="startSlideshow('${name}', ${isFav})" style="background:var(--secondary)">▶ Play Slideshow</button>
+            </div>
+            <h2>${name}</h2><div class="grid">`;
         
         items.forEach((item, i) => {
             html += `<div class="photo-item">
                 <img src="${item.thumb}" onclick="window.open('${item.url}')">
-                <button class="fav-btn ${item.fav ? 'active' : ''}" onclick="toggleFav('${name}', ${i}, ${isFavView})">❤️</button>
-                ${!isFavView ? `<button class="del-photo" onclick="deleteItem('${name}',${i})">×</button>` : ''}
+                <button class="fav-btn ${item.fav ? 'active' : ''}" onclick="toggleFav('${name}', ${i})">❤️</button>
+                ${!isFav ? `<button class="del-photo" onclick="deleteItem('${name}',${i})">×</button>` : ''}
             </div>`;
         });
         div.innerHTML = html + `</div></div>`;
     }
 
-    function toggleFav(albumName, index, isFavView) {
-        if (isFavView) {
-            // Find the actual item in the real albums
-            for (let name in albums) {
-                albums[name].items.forEach(item => {
-                    if (item.fav) { /* Logic to untoggle from fav view can be complex, usually we just refresh */ }
-                });
-            }
-            alert("Open the original album to untoggle favorites!");
-        } else {
-            albums[albumName].items[index].fav = !albums[albumName].items[index].fav;
-            save();
-            openAlbum(albumName, false);
-        }
+    // FEATURE 2: CINEMATIC SLIDESHOW LOGIC
+    function startSlideshow(name, isFav) {
+        let items = isFav ? [] : albums[name].items;
+        if(isFav) for(let n in albums) albums[n].items.forEach(i => { if(i.fav) items.push(i); });
+        
+        if (items.length === 0) return;
+        
+        const overlay = document.getElementById("slideshowOverlay");
+        const img = document.getElementById("slideshowImg");
+        overlay.style.display = "flex";
+        
+        let index = 0;
+        img.src = items[index].url;
+        
+        slideshowInterval = setInterval(() => {
+            img.style.opacity = 0;
+            setTimeout(() => {
+                index = (index + 1) % items.length;
+                img.src = items[index].url;
+                img.style.opacity = 1;
+            }, 1000);
+        }, 4000);
+    }
+
+    function stopSlideshow() {
+        clearInterval(slideshowInterval);
+        document.getElementById("slideshowOverlay").style.display = "none";
+    }
+
+    function toggleFav(name, i) {
+        albums[name].items[i].fav = !albums[name].items[i].fav;
+        save(); openAlbum(name, false);
     }
 
     function renameAlbum(old) {
@@ -311,8 +312,6 @@
         save();
         albums[name] ? openAlbum(name, false) : display();
     }
-
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>
