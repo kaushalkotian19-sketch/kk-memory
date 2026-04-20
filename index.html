@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Memories | Personal Vault</title>
+    <title>My Memories | AI Vault</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
-            /* Default Night Theme */
             --primary: #ff00cc;
             --secondary: #3333ff;
             --bg: #050010;
@@ -19,17 +18,13 @@
 
         body {
             margin: 0;
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at top right, var(--accent-glow), var(--bg) 80%);
             background-attachment: fixed;
             color: var(--text-main);
             padding-bottom: 80px;
             transition: all 1.5s ease-in-out;
-            min-height: 100vh;
         }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
 
         .header {
             position: sticky; top: 0; z-index: 100;
@@ -39,19 +34,21 @@
         }
 
         .header h1 { 
-            margin: 0; font-size: 1.4rem; font-weight: 700;
+            margin: 0; font-size: 1.4rem;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 20px; }
+        .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 10px; }
 
-        /* FLASHBACK & BUTTONS */
-        .flashback-card {
-            background: var(--card-bg); border: 1px solid var(--primary);
-            border-radius: 20px; padding: 15px; margin-bottom: 20px; display: none;
+        /* SETTINGS & TOGGLES */
+        .settings-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px;
+            font-size: 0.8rem; border: 1px solid var(--glass-border);
         }
 
+        /* SEARCH & UPLOAD */
         input, select {
             width: 100%; margin: 8px 0; padding: 14px; box-sizing: border-box;
             border-radius: 14px; border: 1px solid var(--glass-border);
@@ -61,71 +58,65 @@
         button {
             width: 100%; margin: 10px 0; padding: 14px; border-radius: 14px;
             border: none; background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; font-weight: 600; cursor: pointer; transition: 0.3s;
+            color: white; font-weight: 600; cursor: pointer;
         }
-        button:active { transform: scale(0.96); }
 
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px 0; }
         
         .album-card {
             background: var(--card-bg); border: 1px solid var(--glass-border);
-            border-radius: 18px; padding: 12px; transition: 0.3s;
+            border-radius: 18px; padding: 12px; position: relative;
         }
 
         .thumb-container {
             width: 100%; aspect-ratio: 1/1; background: #111;
-            border-radius: 12px; overflow: hidden; position: relative;
+            border-radius: 12px; overflow: hidden;
         }
         .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* SLIDESHOW OVERLAY */
-        #slideshowOverlay {
-            position: fixed; inset: 0; background: black; z-index: 2000;
-            display: none; justify-content: center; align-items: center;
-        }
-        #slideshowImg { max-width: 100%; max-height: 100%; object-fit: contain; transition: opacity 1s ease-in-out; }
-        .close-slideshow { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; border: none; background: none; }
 
         .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; border: 1px solid var(--glass-border); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
-        .del-photo { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.6); border: none; color: white; border-radius: 50%; width: 24px; height: 24px; }
         
-        .fav-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.4); border: none; border-radius: 50%; width: 30px; height: 30px; color: white; }
-        .fav-btn.active { color: #ff0055; }
+        .tag-badge { font-size: 0.6rem; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; margin-right: 3px; }
 
         #lockScreen {
             position: fixed; inset: 0; background: var(--bg); z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
+
+        /* WATERMARK TOGGLE SWITCH */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #333; transition: .4s; border-radius: 20px; }
+        input:checked + .slider { background-color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div id="lockScreen">
-    <h1 style="margin-bottom: 30px;">🔐</h1>
-    <input id="pass" type="password" placeholder="ENTER PIN" style="width: 200px; text-align: center; letter-spacing: 5px;">
-    <button onclick="unlock()" style="width: 200px;">Access</button>
-</div>
-
-<div id="slideshowOverlay">
-    <button class="close-slideshow" onclick="stopSlideshow()">×</button>
-    <img id="slideshowImg">
+    <h2 style="font-weight: 300;">ENTER VAULT</h2>
+    <input id="pass" type="password" placeholder="PIN" style="width: 180px; text-align: center; letter-spacing: 5px;">
+    <button onclick="unlock()" style="width: 180px;">Unlock</button>
 </div>
 
 <div class="header">
-    <h1>📸 MY MEMORIES</h1>
+    <h1>📸 AI MEMORY VAULT</h1>
 </div>
 
 <div class="container">
-    <div id="flashback" class="flashback-card fade-in">
-        <p style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--primary); font-weight: bold;">✨ FLASHBACK</p>
-        <div id="flashback-content" style="display: flex; gap: 10px;"></div>
+    <div class="settings-bar">
+        <span>✍️ Digital Watermark</span>
+        <label class="switch">
+            <input type="checkbox" id="watermarkToggle" onchange="saveSettings()">
+            <span class="slider"></span>
+        </label>
     </div>
 
-    <input id="search" placeholder="🔍 Find a folder..." oninput="display()">
+    <input id="search" placeholder="🔍 Search tags (e.g. 'Cake', 'Beach', 'Cat')" oninput="display()">
     
-    <div class="upload-area">
-        <input id="albumName" placeholder="Album Name">
+    <div class="upload-area" style="background:var(--card-bg); padding:15px; border-radius:20px; border:1px solid var(--glass-border);">
+        <input id="albumName" list="album-list" placeholder="Album Name (e.g. Food)">
+        <datalist id="album-list"></datalist>
         <input type="file" id="fileInput" multiple>
         <button id="uploadBtn" onclick="upload(this)">Cloud Upload</button>
     </div>
@@ -139,76 +130,77 @@
     const UPLOAD_PRESET = "memories_upload";
 
     let albums = JSON.parse(localStorage.getItem("albums")) || {};
-    let slideshowInterval;
+    let useWatermark = JSON.parse(localStorage.getItem("useWatermark")) || false;
 
-    function save() { localStorage.setItem("albums", JSON.stringify(albums)); }
+    function save() { 
+        localStorage.setItem("albums", JSON.stringify(albums)); 
+        updateDatalist();
+    }
 
-    // FEATURE 1: ADAPTIVE THEMES
-    function applyAdaptiveTheme() {
-        const hour = new Date().getHours();
-        const root = document.documentElement.style;
-
-        if (hour >= 5 && hour < 11) { // Morning
-            root.setProperty('--bg', '#100b20');
-            root.setProperty('--primary', '#ff8c00');
-            root.setProperty('--secondary', '#ff0080');
-            root.setProperty('--accent-glow', '#ff8c0033');
-        } else if (hour >= 11 && hour < 17) { // Midday
-            root.setProperty('--bg', '#001a33');
-            root.setProperty('--primary', '#00d2ff');
-            root.setProperty('--secondary', '#3a7bd5');
-            root.setProperty('--accent-glow', '#00d2ff33');
-        } else { // Night
-            root.setProperty('--bg', '#050010');
-            root.setProperty('--primary', '#ff00cc');
-            root.setProperty('--secondary', '#3333ff');
-            root.setProperty('--accent-glow', '#3333ff33');
-        }
+    function saveSettings() {
+        useWatermark = document.getElementById("watermarkToggle").checked;
+        localStorage.setItem("useWatermark", JSON.stringify(useWatermark));
     }
 
     function unlock() {
         if (document.getElementById("pass").value === PASSWORD) {
             document.getElementById("lockScreen").style.display = "none";
-            applyAdaptiveTheme();
-            checkFlashbacks();
+            document.getElementById("watermarkToggle").checked = useWatermark;
+            applyTimeTheme();
+            updateDatalist();
             display();
-        } else { alert("Locked"); }
+        } else { alert("Wrong PIN"); }
     }
 
-    function checkFlashbacks() {
-        const today = new Date();
-        const monthDay = `${today.getMonth() + 1}/${today.getDate()}`;
-        let matches = [];
-        for (let name in albums) {
-            albums[name].items.forEach(item => { if (item.date && item.date.includes(monthDay)) matches.push(item); });
-        }
-        if (matches.length > 0) {
-            document.getElementById("flashback").style.display = "block";
-            document.getElementById("flashback-content").innerHTML = matches.slice(0, 3).map(img => `<img src="${img.thumb}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">`).join('');
-        }
+    function applyTimeTheme() {
+        const h = new Date().getHours();
+        const root = document.documentElement.style;
+        if (h < 11) root.setProperty('--accent-glow', '#ff008033');
+        else if (h < 17) root.setProperty('--accent-glow', '#00d2ff33');
+        else root.setProperty('--accent-glow', '#3333ff33');
+    }
+
+    function updateDatalist() {
+        const dl = document.getElementById("album-list");
+        dl.innerHTML = Object.keys(albums).map(name => `<option value="${name}">`).join('');
     }
 
     async function upload(btn) {
         const files = document.getElementById("fileInput").files;
         if (files.length === 0) return;
-        btn.innerText = "🚀 Uploading...";
-        const dateStr = `${new Date().getMonth() + 1}/${new Date().getDate()}/${new Date().getFullYear()}`;
+        btn.innerText = "🤖 AI Tagging & Uploading...";
+        btn.disabled = true;
 
         for (let file of files) {
             let formData = new FormData();
             formData.append("file", file);
             formData.append("upload_preset", UPLOAD_PRESET);
+            // This flag tells Cloudinary to run AI categorization
+            formData.append("categorization", "google_tagging"); 
+
             try {
                 let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
                 let data = await res.json();
+                
+                // Get AI Tags or default to empty
+                let aiTags = data.tags || [];
                 let rawUrl = data.secure_url;
                 let thumbUrl = rawUrl.replace('/upload/', '/upload/w_500,h_500,c_fill,g_auto,q_auto,f_auto/');
+                
                 let manual = document.getElementById("albumName").value || "General";
                 if (!albums[manual]) albums[manual] = { items: [] };
-                albums[manual].items.unshift({ url: rawUrl, thumb: thumbUrl, date: dateStr, fav: false });
+                
+                albums[manual].items.unshift({ 
+                    url: rawUrl, 
+                    thumb: thumbUrl, 
+                    tags: aiTags,
+                    date: new Date().toLocaleDateString()
+                });
             } catch (e) { console.error(e); }
         }
-        save(); display(); btn.innerText = "Cloud Upload";
+
+        save(); display(); btn.innerText = "Cloud Upload"; btn.disabled = false;
+        document.getElementById("fileInput").value = "";
     }
 
     function display() {
@@ -216,85 +208,51 @@
         let search = document.getElementById("search").value.toLowerCase();
         let html = '<div class="grid fade-in">';
 
-        // Favorites Folder
-        let favs = [];
-        for (let name in albums) { albums[name].items.forEach(i => { if(i.fav) favs.push(i); }); }
-        if (favs.length > 0) html += renderCard("❤️ Favorites", favs, true);
-
         for (let name in albums) {
-            if (name.toLowerCase().includes(search)) html += renderCard(name, albums[name].items, false);
+            // AI SEARCH LOGIC: Check album name OR AI tags
+            let items = albums[name].items;
+            let matchesSearch = name.toLowerCase().includes(search) || 
+                                items.some(item => item.tags && item.tags.some(t => t.toLowerCase().includes(search)));
+            
+            if (!matchesSearch && search !== "") continue;
+
+            html += `
+                <div class="album-card" onclick="openAlbum('${name}')">
+                    <div class="thumb-container">
+                        <img src="${items[0] ? items[0].thumb : ''}" onerror="this.src='https://placehold.co/400x400?text=Empty'">
+                    </div>
+                    <h3 style="margin:8px 0 2px 0; font-size:0.9rem;">${name}</h3>
+                    <p style="margin:0; font-size:0.7rem; color:#888;">${items.length} Memories</p>
+                </div>`;
         }
         div.innerHTML = html + '</div>';
     }
 
-    function renderCard(name, items, isFav) {
-        return `
-            <div class="album-card">
-                <div onclick="openAlbum('${name}', ${isFav})">
-                    <div class="thumb-container"><img src="${items[0] ? items[0].thumb : ''}" onerror="this.src='https://placehold.co/400x400?text=Empty'"></div>
-                    <h3>${name}</h3><p>${items.length} items</p>
-                </div>
-                ${!isFav ? `<div class="action-btns" style="display:flex; gap:5px; margin-top:8px;">
-                    <button onclick="renameAlbum('${name}')" style="padding:5px">✏️</button>
-                    <button onclick="deleteAlbum('${name}')" style="padding:5px">🗑️</button>
-                </div>` : ''}
-            </div>`;
-    }
-
-    function openAlbum(name, isFav) {
+    function openAlbum(name) {
         let div = document.getElementById("albums");
-        let items = isFav ? [] : albums[name].items;
-        if(isFav) for(let n in albums) albums[n].items.forEach(i => { if(i.fav) items.push(i); });
-
-        let html = `<div class="fade-in">
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button onclick="display()" style="width:80px">Back</button>
-                <button onclick="startSlideshow('${name}', ${isFav})" style="background:var(--secondary)">▶ Play Slideshow</button>
-            </div>
-            <h2>${name}</h2><div class="grid">`;
+        let html = `<button onclick="display()" style="width:80px; margin-bottom:15px;">Back</button>
+                    <h2>${name}</h2><div class="grid">`;
         
-        items.forEach((item, i) => {
+        albums[name].items.forEach((item, i) => {
             html += `<div class="photo-item">
-                <img src="${item.thumb}" onclick="window.open('${item.url}')">
-                <button class="fav-btn ${item.fav ? 'active' : ''}" onclick="toggleFav('${name}', ${i})">❤️</button>
-                ${!isFav ? `<button class="del-photo" onclick="deleteItem('${name}',${i})">×</button>` : ''}
+                <img src="${item.thumb}" onclick="viewImage('${item.url}')">
+                <div style="position:absolute; bottom:5px; left:5px; display:flex; flex-wrap:wrap;">
+                    ${(item.tags || []).slice(0, 2).map(t => `<span class="tag-badge">${t}</span>`).join('')}
+                </div>
             </div>`;
         });
-        div.innerHTML = html + `</div></div>`;
+        div.innerHTML = html + `</div>`;
     }
 
-    // FEATURE 2: CINEMATIC SLIDESHOW LOGIC
-    function startSlideshow(name, isFav) {
-        let items = isFav ? [] : albums[name].items;
-        if(isFav) for(let n in albums) albums[n].items.forEach(i => { if(i.fav) items.push(i); });
-        
-        if (items.length === 0) return;
-        
-        const overlay = document.getElementById("slideshowOverlay");
-        const img = document.getElementById("slideshowImg");
-        overlay.style.display = "flex";
-        
-        let index = 0;
-        img.src = items[index].url;
-        
-        slideshowInterval = setInterval(() => {
-            img.style.opacity = 0;
-            setTimeout(() => {
-                index = (index + 1) % items.length;
-                img.src = items[index].url;
-                img.style.opacity = 1;
-            }, 1000);
-        }, 4000);
-    }
-
-    function stopSlideshow() {
-        clearInterval(slideshowInterval);
-        document.getElementById("slideshowOverlay").style.display = "none";
-    }
-
-    function toggleFav(name, i) {
-        albums[name].items[i].fav = !albums[name].items[i].fav;
-        save(); openAlbum(name, false);
+    function viewImage(url) {
+        let finalUrl = url;
+        if (useWatermark) {
+            // CLOUDINARY WATERMARK MAGIC: Adds "Private Vault" text in the bottom right
+            // We insert the transformation string into the URL
+            const watermarkStyle = "l_text:Arial_40_bold:© My Private Vault,co_white,g_south_east,x_20,y_20,o_50";
+            finalUrl = url.replace('/upload/', `/upload/${watermarkStyle}/`);
+        }
+        window.open(finalUrl, '_blank');
     }
 
     function renameAlbum(old) {
@@ -304,13 +262,6 @@
 
     function deleteAlbum(name) {
         if (confirm("Delete album?")) { delete albums[name]; save(); display(); }
-    }
-
-    function deleteItem(name, i) {
-        albums[name].items.splice(i, 1);
-        if (albums[name].items.length === 0) delete albums[name];
-        save();
-        albums[name] ? openAlbum(name, false) : display();
     }
 </script>
 </body>
