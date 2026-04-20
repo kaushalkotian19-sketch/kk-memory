@@ -1,228 +1,295 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Memories</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary: #ff00cc;
+            --secondary: #3333ff;
+            --bg: #0a001a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Memories</title>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: white;
+            padding-bottom: 50px;
+        }
 
-<link rel="manifest" href="manifest.json">
+        h1 { text-align: center; margin: 20px 0; font-weight: 300; letter-spacing: 2px; }
 
-<style>
-body {margin:0;font-family:sans-serif;background:#0a001a;color:white;}
-h1{text-align:center;}
+        /* Inputs & Buttons */
+        .container { width: 90%; margin: 0 auto; max-width: 500px; }
+        
+        input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            box-sizing: border-box;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: var(--card-bg);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
 
-input,button{
-width:90%;margin:8px auto;display:block;padding:10px;border-radius:10px;border:none;
-}
+        input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.1); }
 
-button{background:linear-gradient(90deg,#ff00cc,#3333ff);color:white;}
+        button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
 
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-padding:10px;
-}
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.album{
-background:#111;
-padding:10px;
-border-radius:10px;
-text-align:center;
-}
+        /* Album Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 15px;
+        }
 
-img{width:100%;border-radius:10px;}
-</style>
+        .album-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 10px;
+            text-align: center;
+            overflow: hidden;
+            transition: 0.3s;
+        }
 
+        .album-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+
+        .thumb-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #111;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .album-card h3 { margin: 5px 0; font-size: 1rem; }
+        .album-card p { margin: 0; font-size: 0.8rem; opacity: 0.6; }
+
+        .action-btns { display: flex; gap: 5px; margin-top: 10px; }
+        .action-btns button { padding: 8px; margin: 0; font-size: 0.8rem; }
+
+        /* Detail View */
+        .photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1/1; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        .del-btn {
+            position: absolute; top: 5px; right: 5px;
+            background: rgba(255,0,0,0.7); width: 30px; height: 30px; 
+            padding: 0; border-radius: 50%;
+        }
+
+        /* Lock Screen */
+        #lockScreen {
+            position: fixed; top:0; left:0; width: 100%; height: 100%;
+            background: #000; z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- LOCK -->
-<div id="lockScreen" style="position:fixed;width:100%;height:100%;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;">
-<h2>🔐 Enter Password</h2>
-<input id="pass" type="password">
-<button onclick="unlock()">Unlock</button>
+<div id="lockScreen">
+    <h2>🔐 Personal Vault</h2>
+    <div style="width: 80%; max-width: 300px;">
+        <input id="pass" type="password" placeholder="Enter Password" style="text-align: center;">
+        <button onclick="unlock()">Unlock</button>
+    </div>
 </div>
 
-<h1>📸 My Memories</h1>
-
-<input id="search" placeholder="Search photos or albums..." oninput="display()">
-
-<input id="albumName" placeholder="Album name (optional AI)">
-<button onclick="createAlbum()">Create Album</button>
-
-<input type="file" id="fileInput" multiple>
-<button onclick="upload(this)">Upload</button>
+<div class="container">
+    <h1>📸 My Memories</h1>
+    <input id="search" placeholder="🔍 Search photos or albums..." oninput="display()">
+    
+    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border);">
+        <input id="albumName" placeholder="Album Name (Optional AI Detect)">
+        <input type="file" id="fileInput" multiple style="border: 2px dashed var(--glass-border); padding: 20px; background: transparent;">
+        <button id="uploadBtn" onclick="upload(this)">Upload to Cloud</button>
+    </div>
+</div>
 
 <div id="albums"></div>
 
 <script>
-let PASSWORD="1234";
+    const PASSWORD = "1234";
+    const CLOUD_NAME = "dzfssbg4j";
+    const UPLOAD_PRESET = "memories_upload";
 
-let CLOUD_NAME="dzfssbg4j";
-let UPLOAD_PRESET="memories_upload";
+    let albums = JSON.parse(localStorage.getItem("albums")) || {};
 
-let albums=JSON.parse(localStorage.getItem("albums"))||{};
+    function save() {
+        localStorage.setItem("albums", JSON.stringify(albums));
+    }
 
-function save(){
-localStorage.setItem("albums",JSON.stringify(albums));
-}
+    function unlock() {
+        if (document.getElementById("pass").value === PASSWORD) {
+            document.getElementById("lockScreen").style.display = "none";
+            display();
+        } else {
+            alert("Access Denied");
+        }
+    }
 
-/* AI DETECT */
-function detectAI(name){
-name=name.toLowerCase();
+    // AI Detection Logic
+    function detectAI(name) {
+        name = name.toLowerCase();
+        if (name.includes("cake") || name.includes("birthday")) return "🎂 Birthday";
+        if (name.includes("travel") || name.includes("trip") || name.includes("beach")) return "✈️ Travel";
+        if (name.includes("family") || name.includes("mom") || name.includes("dad")) return "👨‍👩‍👧 Family";
+        return "📦 Others";
+    }
 
-if(name.includes("cake")||name.includes("birthday")) return "🎂 Birthday";
-if(name.includes("travel")||name.includes("trip")||name.includes("beach")) return "✈️ Travel";
-if(name.includes("family")||name.includes("mom")||name.includes("dad")) return "👨‍👩‍👧 Family";
+    async function upload(btn) {
+        const files = document.getElementById("fileInput").files;
+        if (files.length === 0) return alert("Select files first");
 
-return "📦 Others";
-}
+        btn.innerText = "Processing...";
+        btn.disabled = true;
 
-/* LOCK */
-function unlock(){
-if(document.getElementById("pass").value===PASSWORD){
-document.getElementById("lockScreen").style.display="none";
-display();
-}else{
-alert("Wrong password");
-}
-}
+        for (let file of files) {
+            let formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", UPLOAD_PRESET);
 
-/* CREATE */
-function createAlbum(){
-let name=document.getElementById("albumName").value;
-if(!name) return;
+            try {
+                let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+                let data = await res.json();
+                
+                // Optimization: Add q_auto,f_auto to Cloudinary URL
+                let optimizedUrl = data.secure_url.replace('/upload/', '/upload/q_auto,f_auto/');
 
-if(!albums[name]){
-albums[name]={items:[]};
-save();
-display();
-}
-}
+                let manual = document.getElementById("albumName").value;
+                let albumKey = manual ? manual : detectAI(file.name);
 
-/* UPLOAD CLOUDINARY */
-async function upload(btn){
-let files=document.getElementById("fileInput").files;
-if(files.length===0) return;
+                if (!albums[albumKey]) albums[albumKey] = { items: [] };
+                albums[albumKey].items.push({ url: optimizedUrl, name: file.name });
+            } catch (e) {
+                console.error("Upload failed", e);
+            }
+        }
 
-btn.innerText="Uploading...";
-btn.disabled=true;
+        save();
+        display();
+        btn.innerText = "Upload to Cloud";
+        btn.disabled = false;
+        document.getElementById("fileInput").value = "";
+    }
 
-for(let file of files){
+    function display() {
+        let div = document.getElementById("albums");
+        let search = document.getElementById("search").value.toLowerCase();
+        let html = '<div class="grid">';
 
-let formData=new FormData();
-formData.append("file",file);
-formData.append("upload_preset",UPLOAD_PRESET);
+        for (let name in albums) {
+            let items = albums[name].items;
+            let match = name.toLowerCase().includes(search) || 
+                        items.some(i => i.name.toLowerCase().includes(search));
 
-let res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
-method:"POST",
-body:formData
-});
+            if (!match) continue;
 
-let data=await res.json();
+            let first = items[0];
+            html += `
+                <div class="album-card">
+                    <div onclick="openAlbum('${name}')">
+                        <div class="thumb-container">
+                            ${first ? `<img src="${first.url}" loading="lazy">` : `<span style="font-size:2rem">📁</span>`}
+                        </div>
+                        <h3>${name}</h3>
+                        <p>${items.length} items</p>
+                    </div>
+                    <div class="action-btns">
+                        <button onclick="renameAlbum('${name}')">✏️</button>
+                        <button onclick="deleteAlbum('${name}')" style="background:rgba(255,0,0,0.2)">🗑️</button>
+                    </div>
+                </div>`;
+        }
+        html += '</div>';
+        div.innerHTML = html;
+    }
 
-let manual=document.getElementById("albumName").value;
-let album=manual?manual:detectAI(file.name);
+    function openAlbum(name) {
+        let div = document.getElementById("albums");
+        let html = `
+            <div class="container" style="margin-top:20px">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button onclick="display()" style="width:auto; padding:8px 20px;">⬅ Back</button>
+                    <h2 style="margin:0">${name}</h2>
+                </div>
+                <div class="grid" style="margin-top:20px; padding:0;">`;
 
-if(!albums[album]) albums[album]={items:[]};
+        albums[name].items.forEach((item, i) => {
+            html += `
+                <div class="photo-item">
+                    <img src="${item.url}" onclick="window.open('${item.url}', '_blank')">
+                    <button class="del-btn" onclick="deleteItem('${name}',${i})">×</button>
+                </div>`;
+        });
 
-albums[album].items.push({
-url:data.secure_url,
-name:file.name
-});
-}
+        html += `</div></div>`;
+        div.innerHTML = html;
+    }
 
-save();
-display();
+    function deleteItem(name, i) {
+        if(confirm("Remove this photo?")) {
+            albums[name].items.splice(i, 1);
+            save();
+            openAlbum(name);
+        }
+    }
 
-btn.innerText="Upload";
-btn.disabled=false;
-}
+    function deleteAlbum(name) {
+        if (confirm(`Delete the entire "${name}" album?`)) {
+            delete albums[name];
+            save();
+            display();
+        }
+    }
 
-/* DISPLAY */
-function display(){
-let div=document.getElementById("albums");
-let search=document.getElementById("search").value.toLowerCase();
+    function renameAlbum(name) {
+        let newName = prompt("Enter new album name:", name);
+        if (newName && newName !== name) {
+            albums[newName] = albums[name];
+            delete albums[name];
+            save();
+            display();
+        }
+    }
 
-let html='<div class="grid">';
-
-for(let name in albums){
-
-let items=albums[name].items;
-
-let match=name.toLowerCase().includes(search) ||
-items.some(i=>i.name.toLowerCase().includes(search));
-
-if(!match) continue;
-
-let first=items[0];
-
-html+=`
-<div class="album">
-<div onclick="openAlbum('${name}')">
-${first?`<img src="${first.url}">`:"No Image"}
-<h3>${name}</h3>
-<p>${items.length} items</p>
-</div>
-
-<button onclick="renameAlbum('${name}')">✏️</button>
-<button onclick="deleteAlbum('${name}')">🗑️</button>
-</div>
-`;
-}
-
-html+='</div>';
-div.innerHTML=html;
-}
-
-/* OPEN */
-function openAlbum(name){
-let div=document.getElementById("albums");
-
-let html=`<button onclick="display()">⬅ Back</button><h2>${name}</h2>`;
-
-albums[name].items.forEach((item,i)=>{
-html+=`<img src="${item.url}">`;
-html+=`<button onclick="deleteItem('${name}',${i})">Delete</button>`;
-});
-
-div.innerHTML=html;
-}
-
-/* DELETE ITEM */
-function deleteItem(name,i){
-albums[name].items.splice(i,1);
-save();
-openAlbum(name);
-}
-
-/* DELETE ALBUM */
-function deleteAlbum(name){
-if(confirm("Delete album?")){
-delete albums[name];
-save();
-display();
-}
-}
-
-/* RENAME */
-function renameAlbum(name){
-let newName=prompt("New name");
-if(newName){
-albums[newName]=albums[name];
-delete albums[name];
-save();
-display();
-}
-}
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
 </script>
-
- <script>
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js');
-}
- </script> 
 </body>
 </html>
