@@ -89,8 +89,8 @@ button {
 
 <body>
 
-<!-- SPLASH -->
-<div id="splash">
+<!-- SPLASH (click to skip also) -->
+<div id="splash" onclick="this.style.display='none'">
     <h1>📸 Memories</h1>
 </div>
 
@@ -114,12 +114,13 @@ function saveData(){
     localStorage.setItem("albums", JSON.stringify(albums));
 }
 
-/* SPLASH HIDE */
-window.onload = () => {
-    setTimeout(()=>{
-        document.getElementById("splash").style.display = "none";
-    }, 1500);
-};
+/* ✅ FIXED SPLASH (IMPORTANT) */
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        let splash = document.getElementById("splash");
+        if (splash) splash.style.display = "none";
+    }, 1200);
+});
 
 /* CREATE ALBUM */
 function createAlbum(){
@@ -234,4 +235,22 @@ function displayAlbums(){
         html += `<button onclick="startSlideshow('${album}')">▶ Slideshow</button>`;
 
         albums[album].forEach((item, index)=>{
-            if(item.type === "
+            if(item.type === "image"){
+                html += `<img class="media" src="${item.url}">`;
+            } else {
+                html += `<video class="media" controls src="${item.url}"></video>`;
+            }
+
+            html += `<button class="deleteBtn" onclick="deleteItem('${album}', ${index})">Delete</button>`;
+        });
+
+        html += `</div>`;
+        container.innerHTML += html;
+    }
+}
+
+displayAlbums();
+</script>
+
+</body>
+</html>
