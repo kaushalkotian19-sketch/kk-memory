@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Memories</title>
+
+<link rel="manifest" href="manifest.json">
 
 <style>
 body {margin:0;font-family:sans-serif;background:#0a001a;color:white;}
@@ -30,6 +33,7 @@ text-align:center;
 
 img{width:100%;border-radius:10px;}
 </style>
+
 </head>
 
 <body>
@@ -43,33 +47,38 @@ img{width:100%;border-radius:10px;}
 
 <h1>📸 My Memories</h1>
 
-<input id="albumName" placeholder="Album name">
+<input id="search" placeholder="Search photos or albums..." oninput="display()">
+
+<input id="albumName" placeholder="Album name (optional AI)">
 <button onclick="createAlbum()">Create Album</button>
 
 <input type="file" id="fileInput" multiple>
-<button onclick="upload()">Upload</button>
+<button onclick="upload(this)">Upload</button>
 
 <div id="albums"></div>
 
 <script>
 let PASSWORD="1234";
 
-let albums = JSON.parse(localStorage.getItem("albums")) || {};
+let CLOUD_NAME="dzfssbg4j";
+let UPLOAD_PRESET="memories_upload";
+
+let albums=JSON.parse(localStorage.getItem("albums"))||{};
 
 function save(){
-localStorage.setItem("albums", JSON.stringify(albums));
+localStorage.setItem("albums",JSON.stringify(albums));
 }
 
-/* FIX OLD DATA */
-function fixData(){
-for(let a in albums){
-if(!albums[a].items){
-albums[a]={items:albums[a]};
+/* AI DETECT */
+function detectAI(name){
+name=name.toLowerCase();
+
+if(name.includes("cake")||name.includes("birthday")) return "🎂 Birthday";
+if(name.includes("travel")||name.includes("trip")||name.includes("beach")) return "✈️ Travel";
+if(name.includes("family")||name.includes("mom")||name.includes("dad")) return "👨‍👩‍👧 Family";
+
+return "📦 Others";
 }
-}
-save();
-}
-fixData();
 
 /* LOCK */
 function unlock(){
@@ -93,39 +102,69 @@ display();
 }
 }
 
-/* UPLOAD */
-async function upload(){
+/* UPLOAD CLOUDINARY */
+async function upload(btn){
 let files=document.getElementById("fileInput").files;
 if(files.length===0) return;
 
-let name=document.getElementById("albumName").value || "Default";
+btn.innerText="Uploading...";
+btn.disabled=true;
 
-if(!albums[name]) albums[name]={items:[]};
+for(let file of files){
 
-for(let f of files){
-let url=URL.createObjectURL(f); // TEMP (works always)
-albums[name].items.push({url});
+let formData=new FormData();
+formData.append("file",file);
+formData.append("upload_preset",UPLOAD_PRESET);
+
+let res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
+method:"POST",
+body:formData
+});
+
+let data=await res.json();
+
+let manual=document.getElementById("albumName").value;
+let album=manual?manual:detectAI(file.name);
+
+if(!albums[album]) albums[album]={items:[]};
+
+albums[album].items.push({
+url:data.secure_url,
+name:file.name
+});
 }
 
 save();
 display();
+
+btn.innerText="Upload";
+btn.disabled=false;
 }
 
 /* DISPLAY */
 function display(){
 let div=document.getElementById("albums");
+let search=document.getElementById("search").value.toLowerCase();
 
 let html='<div class="grid">';
 
 for(let name in albums){
-let first=albums[name].items[0];
+
+let items=albums[name].items;
+
+let match=name.toLowerCase().includes(search) ||
+items.some(i=>i.name.toLowerCase().includes(search));
+
+if(!match) continue;
+
+let first=items[0];
 
 html+=`
 <div class="album">
 <div onclick="openAlbum('${name}')">
 ${first?`<img src="${first.url}">`:"No Image"}
 <h3>${name}</h3>
-<p>${albums[name].items.length} items</p>
+<p>${items.length} items</p>
 </div>
 
 <button onclick="renameAlbum('${name}')">✏️</button>
@@ -152,7 +191,7 @@ html+=`<button onclick="deleteItem('${name}',${i})">Delete</button>`;
 div.innerHTML=html;
 }
 
-/* DELETE */
+/* DELETE ITEM */
 function deleteItem(name,i){
 albums[name].items.splice(i,1);
 save();
