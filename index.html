@@ -21,18 +21,16 @@
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text-main);
-            padding-bottom: env(safe-area-inset-bottom, 50px);
+            padding-bottom: 60px;
         }
 
-        /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
 
-        /* Glassmorphism Header */
         .header {
             position: sticky;
             top: 0;
@@ -84,11 +82,11 @@
             color: white;
             font-weight: 600;
             transition: 0.2s;
+            cursor: pointer;
         }
 
         button:active { transform: scale(0.96); }
 
-        /* Grid Layout */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -102,6 +100,7 @@
             border-radius: 18px;
             padding: 12px;
             transition: 0.3s;
+            position: relative;
         }
 
         .thumb-container {
@@ -118,16 +117,23 @@
 
         .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
         
-        .album-card h3 { margin: 0; font-size: 0.95rem; }
+        .album-card h3 { margin: 0; font-size: 0.95rem; text-transform: capitalize; }
         .album-card p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-dim); }
+
+        .action-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .action-btns button { 
+            padding: 10px; margin: 0; font-size: 0.85rem; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid var(--glass-border);
+        }
 
         .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; border: 1px solid var(--glass-border); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
         
         .del-btn {
             position: absolute; top: 8px; right: 8px;
-            background: rgba(255, 50, 50, 0.8); width: 28px; height: 28px; 
-            border-radius: 50%; border: none; color: white; line-height: 1;
+            background: rgba(255, 50, 50, 0.85); width: 28px; height: 28px; 
+            border-radius: 50%; border: none; color: white;
         }
 
         #lockScreen {
@@ -184,7 +190,8 @@
     function detectAI(name) {
         name = name.toLowerCase();
         if (/cake|birthday|party/.test(name)) return "🎂 Birthday";
-        if (/beach|trip|travel|vacation|food/.test(name)) return "✈️ Travel";
+        if (/beach|trip|travel|vacation/.test(name)) return "✈️ Travel";
+        if (/food|eat|meal/.test(name)) return "🍱 Food";
         return "📦 General";
     }
 
@@ -208,7 +215,6 @@
                 let data = await res.json();
                 
                 let rawUrl = data.secure_url;
-                // Optimized thumbnails using Cloudinary transformations
                 let thumbUrl = rawUrl.includes('/upload/') ? rawUrl.replace('/upload/', '/upload/w_500,h_500,c_fill,g_auto,q_auto,f_auto/') : rawUrl;
                 let fullUrl = rawUrl.includes('/upload/') ? rawUrl.replace('/upload/', '/upload/q_auto,f_auto/') : rawUrl;
 
@@ -227,6 +233,10 @@
         btn.innerText = "Cloud Upload";
         btn.disabled = false;
         document.getElementById("fileInput").value = "";
+        document.getElementById("albumName").value = "";
+        
+        // Auto-scroll to show new upload
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
     function display() {
@@ -234,24 +244,30 @@
         let search = document.getElementById("search").value.toLowerCase();
         let html = '<div class="grid fade-in">';
 
-        for (let name in albums) {
-            let items = albums[name].items;
-            if (!name.toLowerCase().includes(search) && !items.some(i => i.name.toLowerCase().includes(search))) continue;
+        let keys = Object.keys(albums);
+        if (keys.length === 0) {
+            html = '<div style="grid-column: 1 / -1; text-align:center; color:var(--text-dim); padding:40px;">No memories yet. Upload some!</div>';
+        } else {
+            for (let name in albums) {
+                let items = albums[name].items;
+                if (!name.toLowerCase().includes(search) && !items.some(i => i.name.toLowerCase().includes(search))) continue;
 
-            let cover = items[0];
-            html += `
-                <div class="album-card">
-                    <div onclick="openAlbum('${name}')">
-                        <div class="thumb-container">
-                            ${cover ? `<img src="${cover.thumb}" loading="lazy">` : `📁`}
+                let cover = items[0];
+                html += `
+                    <div class="album-card">
+                        <div onclick="openAlbum('${name}')">
+                            <div class="thumb-container">
+                                ${cover ? `<img src="${cover.thumb}" loading="lazy" onerror="this.src='https://placehold.co/400x400/111/white?text=Empty'">` : `<span style="font-size:2rem">📁</span>`}
+                            </div>
+                            <h3>${name}</h3>
+                            <p>${items.length} memories</p>
                         </div>
-                        <h3>${name}</h3>
-                        <p>${items.length} memories</p>
-                    </div>
-                    <div class="action-btns">
-                        <button onclick="deleteAlbum('${name}')" style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border)">🗑️</button>
-                    </div>
-                </div>`;
+                        <div class="action-btns">
+                            <button onclick="renameAlbum('${name}')">✏️</button>
+                            <button onclick="deleteAlbum('${name}')">🗑️</button>
+                        </div>
+                    </div>`;
+            }
         }
         html += '</div>';
         div.innerHTML = html;
@@ -263,24 +279,35 @@
             <div class="fade-in">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <button onclick="display()" style="width:auto; padding:10px 20px; background:rgba(255,255,255,0.1)">Back</button>
-                    <h2 style="margin:0">${name}</h2>
+                    <h2 style="margin:0; text-transform:capitalize;">${name}</h2>
                 </div>
                 <div class="grid" style="padding:0;">`;
 
         albums[name].items.forEach((item, i) => {
             html += `
                 <div class="photo-item">
-                    <img src="${item.thumb}" onclick="window.open('${item.url}', '_blank')">
+                    <img src="${item.thumb}" onclick="window.open('${item.url}', '_blank')" onerror="this.src='https://placehold.co/400x400/111/white?text=Error'">
                     <button class="del-btn" onclick="deleteItem('${name}',${i})">×</button>
                 </div>`;
         });
 
         html += `</div></div>`;
         div.innerHTML = html;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renameAlbum(oldName) {
+        let newName = prompt("Enter new name for this album:", oldName);
+        if (newName && newName !== oldName) {
+            albums[newName] = albums[oldName];
+            delete albums[oldName];
+            save();
+            display();
+        }
     }
 
     function deleteItem(name, i) {
-        if(confirm("Delete photo?")) {
+        if(confirm("Delete this photo permanently?")) {
             albums[name].items.splice(i, 1);
             if (albums[name].items.length === 0) delete albums[name];
             save();
@@ -289,7 +316,11 @@
     }
 
     function deleteAlbum(name) {
-        if (confirm(`Delete "${name}"?`)) { delete albums[name]; save(); display(); }
+        if (confirm(`Delete entire album "${name}"?`)) {
+            delete albums[name];
+            save();
+            display();
+        }
     }
 
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
