@@ -225,28 +225,69 @@ function startSlideshow(album){
 }
 
 /* DISPLAY */
+let currentAlbum = null;
+
+/* DISPLAY ALBUM LIST (GRID) */
 function displayAlbums(){
     let container = document.getElementById("albums");
     container.innerHTML = "";
 
-    for(let album in albums){
-        let html = `<div class="album"><h3>${album}</h3>`;
-
-        html += `<button onclick="startSlideshow('${album}')">▶ Slideshow</button>`;
-
-        albums[album].forEach((item, index)=>{
-            if(item.type === "image"){
-                html += `<img class="media" src="${item.url}">`;
-            } else {
-                html += `<video class="media" controls src="${item.url}"></video>`;
-            }
-
-            html += `<button class="deleteBtn" onclick="deleteItem('${album}', ${index})">Delete</button>`;
-        });
-
-        html += `</div>`;
-        container.innerHTML += html;
+    if(currentAlbum){
+        displaySingleAlbum(currentAlbum);
+        return;
     }
+
+    let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;">`;
+
+    for(let album in albums){
+        html += `
+        <div onclick="openAlbum('${album}')" 
+        style="padding:20px;background:rgba(255,255,255,0.05);
+        border-radius:15px;text-align:center;
+        box-shadow:0 0 15px #ff00cc;">
+            <h3>${album}</h3>
+            <p>${albums[album].length} items</p>
+        </div>`;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+/* OPEN ALBUM */
+function openAlbum(name){
+    currentAlbum = name;
+    displayAlbums();
+}
+
+/* BACK */
+function goBack(){
+    currentAlbum = null;
+    displayAlbums();
+}
+
+/* SHOW SINGLE ALBUM */
+function displaySingleAlbum(album){
+    let container = document.getElementById("albums");
+
+    let html = `
+    <button onclick="goBack()">⬅ Back</button>
+    <h2 style="text-align:center">${album}</h2>
+    <button onclick="startSlideshow('${album}')">▶ Slideshow</button>
+    `;
+
+    albums[album].forEach((item, index)=>{
+        if(item.type === "image"){
+            html += `<img class="media" src="${item.url}">`;
+        } else {
+            html += `<video class="media" controls src="${item.url}"></video>`;
+        }
+
+        html += `<button class="deleteBtn" onclick="deleteItem('${album}', ${index})">Delete</button>`;
+    });
+
+    container.innerHTML = html;
+}
 }
 
 displayAlbums();
