@@ -2,7 +2,6 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>My Memories</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
@@ -15,7 +14,6 @@ body {
     color: white;
 }
 
-/* HEADER */
 h1 {
     text-align: center;
     padding: 15px;
@@ -23,7 +21,6 @@ h1 {
     text-shadow: 0 0 20px #ff00ff;
 }
 
-/* INPUT */
 input {
     width: 90%;
     margin: 8px auto;
@@ -35,7 +32,6 @@ input {
     color: white;
 }
 
-/* BUTTON */
 button {
     width: 90%;
     margin: 8px auto;
@@ -49,7 +45,6 @@ button {
     box-shadow: 0 0 10px #ff00cc;
 }
 
-/* GRID */
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -57,7 +52,6 @@ button {
     padding: 12px;
 }
 
-/* ALBUM CARD */
 .albumCard {
     position: relative;
     height: 160px;
@@ -73,7 +67,6 @@ button {
     object-fit: cover;
 }
 
-/* OVERLAY */
 .overlay {
     position: absolute;
     bottom: 0;
@@ -93,14 +86,12 @@ button {
     opacity: 0.7;
 }
 
-/* EMPTY */
 .empty {
     text-align: center;
     opacity: 0.5;
     padding: 40px 0;
 }
 
-/* MEDIA */
 .media {
     width: 100%;
     margin-top: 10px;
@@ -111,7 +102,6 @@ button {
     background: red;
 }
 
-/* VIEWER */
 #viewer {
     position: fixed;
     top:0;
@@ -132,7 +122,7 @@ button {
 <h1>📸 My Memories</h1>
 
 <input id="search" placeholder="Search album..." oninput="displayAlbums()">
-<input id="albumName" placeholder="Album Name">
+<input id="albumName" placeholder="Album Name (optional AI will decide)">
 
 <button onclick="createAlbum()">Create Album</button>
 
@@ -156,6 +146,25 @@ let currentAlbum = null;
 function saveData(){
     localStorage.setItem("albums", JSON.stringify(albums));
     localStorage.setItem("locked", JSON.stringify(lockedAlbums));
+}
+
+/* AI DETECTION */
+function detectAlbumAI(fileName){
+    let name = fileName.toLowerCase();
+
+    if(name.includes("birthday") || name.includes("cake") || name.includes("bday")){
+        return "🎂 Birthday";
+    }
+
+    if(name.includes("trip") || name.includes("travel") || name.includes("beach") || name.includes("tour")){
+        return "✈️ Travel";
+    }
+
+    if(name.includes("family") || name.includes("mom") || name.includes("dad") || name.includes("home")){
+        return "👨‍👩‍👧 Family";
+    }
+
+    return "📦 Others";
 }
 
 /* CREATE */
@@ -189,7 +198,8 @@ async function uploadFile(btn){
 
     let data = await res.json();
 
-    let album = document.getElementById("albumName").value || "Default";
+    let manualAlbum = document.getElementById("albumName").value;
+    let album = manualAlbum ? manualAlbum : detectAlbumAI(file.name);
 
     if(!albums[album]) albums[album] = [];
 
