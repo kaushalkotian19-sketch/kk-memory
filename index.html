@@ -3,114 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Memories</title>
+    <title>My Memories | Personal Vault</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --primary: #ff00cc;
             --secondary: #3333ff;
-            --bg: #0a001a;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg: #050010;
+            --card-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-main: #ffffff;
+            --text-dim: #b0b0b0;
         }
 
         body {
             margin: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
-            color: white;
-            padding-bottom: 50px;
+            color: var(--text-main);
+            padding-bottom: env(safe-area-inset-bottom, 50px);
+            line-height: 1.5;
         }
 
-        h1 { text-align: center; margin: 20px 0; font-weight: 300; letter-spacing: 2px; }
+        /* Glassmorphism Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(5, 0, 16, 0.8);
+            backdrop-filter: blur(15px);
+            padding: 15px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
 
-        /* Inputs & Buttons */
-        .container { width: 90%; margin: 0 auto; max-width: 500px; }
+        h1 { 
+            text-align: center; 
+            margin: 0; 
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 20px; }
         
+        /* Modern Inputs */
         input {
             width: 100%;
-            margin: 10px 0;
-            padding: 12px;
+            margin: 8px 0;
+            padding: 14px;
             box-sizing: border-box;
-            border-radius: 12px;
+            border-radius: 14px;
             border: 1px solid var(--glass-border);
             background: var(--card-bg);
             color: white;
-            backdrop-filter: blur(10px);
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            font-size: 16px; /* Prevents iOS zoom on focus */
         }
 
-        input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.1); }
+        input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(255,0,204,0.2); }
+
+        .upload-area {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 25px;
+        }
 
         button {
             width: 100%;
             margin: 10px 0;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 14px;
             border: none;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, filter 0.2s;
         }
 
-        button:active { transform: scale(0.98); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        button:active { transform: scale(0.97); filter: brightness(1.1); }
+        button:disabled { opacity: 0.5; filter: grayscale(1); }
 
-        /* Album Grid */
+        /* Grid System */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            padding: 15px;
+            gap: 12px;
+            padding: 15px 0;
         }
 
         .album-card {
             background: var(--card-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 10px;
-            text-align: center;
-            overflow: hidden;
-            transition: 0.3s;
+            border-radius: 18px;
+            padding: 12px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .album-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .album-card:hover { border-color: var(--primary); transform: translateY(-4px); }
 
         .thumb-container {
             width: 100%;
             aspect-ratio: 1/1;
             background: #111;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
         
-        .album-card h3 { margin: 5px 0; font-size: 1rem; }
-        .album-card p { margin: 0; font-size: 0.8rem; opacity: 0.6; }
+        .album-card h3 { margin: 0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .album-card p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-dim); }
 
-        .action-btns { display: flex; gap: 5px; margin-top: 10px; }
-        .action-btns button { padding: 8px; margin: 0; font-size: 0.8rem; }
+        .action-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .action-btns button { padding: 10px; margin: 0; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
 
-        /* Detail View */
-        .photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1/1; }
+        /* Photo View */
+        .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; border: 1px solid var(--glass-border); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
         .del-btn {
-            position: absolute; top: 5px; right: 5px;
-            background: rgba(255,0,0,0.7); width: 30px; height: 30px; 
-            padding: 0; border-radius: 50%;
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(255,50,50,0.9); width: 28px; height: 28px; 
+            padding: 0; border-radius: 50%; font-size: 18px; line-height: 1;
         }
 
         /* Lock Screen */
         #lockScreen {
-            position: fixed; top:0; left:0; width: 100%; height: 100%;
-            background: #000; z-index: 999;
+            position: fixed; inset: 0;
+            background: var(--bg); z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
     </style>
@@ -119,25 +149,29 @@
 <body>
 
 <div id="lockScreen">
-    <h2>🔐 Personal Vault</h2>
-    <div style="width: 80%; max-width: 300px;">
-        <input id="pass" type="password" placeholder="Enter Password" style="text-align: center;">
-        <button onclick="unlock()">Unlock</button>
+    <div style="font-size: 3rem; margin-bottom: 20px;">🔐</div>
+    <h2 style="font-weight: 400; margin-bottom: 30px;">Personal Vault</h2>
+    <div style="width: 85%; max-width: 320px;">
+        <input id="pass" type="password" placeholder="Enter PIN" style="text-align: center; font-size: 1.2rem; letter-spacing: 4px;">
+        <button onclick="unlock()">Access Gallery</button>
     </div>
+</div>
+
+<div class="header">
+    <h1>📸 MY MEMORIES</h1>
 </div>
 
 <div class="container">
-    <h1>📸 My Memories</h1>
-    <input id="search" placeholder="🔍 Search photos or albums..." oninput="display()">
+    <input id="search" placeholder="🔍 Search folders or photos..." oninput="display()">
     
-    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border);">
-        <input id="albumName" placeholder="Album Name (Optional AI Detect)">
-        <input type="file" id="fileInput" multiple style="border: 2px dashed var(--glass-border); padding: 20px; background: transparent;">
-        <button id="uploadBtn" onclick="upload(this)">Upload to Cloud</button>
+    <div class="upload-area">
+        <input id="albumName" placeholder="Album Name (Optional)">
+        <input type="file" id="fileInput" multiple style="border: 2px dashed var(--glass-border); padding: 15px; margin: 15px 0;">
+        <button id="uploadBtn" onclick="upload(this)">Cloud Upload</button>
     </div>
-</div>
 
-<div id="albums"></div>
+    <div id="albums"></div>
+</div>
 
 <script>
     const PASSWORD = "1234";
@@ -155,24 +189,24 @@
             document.getElementById("lockScreen").style.display = "none";
             display();
         } else {
-            alert("Access Denied");
+            alert("Wrong PIN");
         }
     }
 
-    // AI Detection Logic
     function detectAI(name) {
         name = name.toLowerCase();
-        if (name.includes("cake") || name.includes("birthday")) return "🎂 Birthday";
-        if (name.includes("travel") || name.includes("trip") || name.includes("beach")) return "✈️ Travel";
-        if (name.includes("family") || name.includes("mom") || name.includes("dad")) return "👨‍👩‍👧 Family";
-        return "📦 Others";
+        if (/cake|birthday|party/.test(name)) return "🎂 Birthday";
+        if (/beach|trip|travel|vacation/.test(name)) return "✈️ Travel";
+        if (/fam|mom|dad|sister|brother/.test(name)) return "👨‍👩‍👧 Family";
+        return "📦 General";
     }
 
     async function upload(btn) {
         const files = document.getElementById("fileInput").files;
-        if (files.length === 0) return alert("Select files first");
+        if (files.length === 0) return alert("Select photos first");
 
-        btn.innerText = "Processing...";
+        const originalText = btn.innerText;
+        btn.innerText = "🚀 Uploading...";
         btn.disabled = true;
 
         for (let file of files) {
@@ -187,24 +221,26 @@
                 });
                 let data = await res.json();
                 
-                // Optimization: Add q_auto,f_auto to Cloudinary URL
-                let optimizedUrl = data.secure_url.replace('/upload/', '/upload/q_auto,f_auto/');
+                // ADDED: Square thumbnail optimization and auto-format
+                let thumbUrl = data.secure_url.replace('/upload/', '/upload/w_400,h_400,c_fill,g_auto,q_auto,f_auto/');
+                let fullUrl = data.secure_url.replace('/upload/', '/upload/q_auto,f_auto/');
 
                 let manual = document.getElementById("albumName").value;
                 let albumKey = manual ? manual : detectAI(file.name);
 
                 if (!albums[albumKey]) albums[albumKey] = { items: [] };
-                albums[albumKey].items.push({ url: optimizedUrl, name: file.name });
+                albums[albumKey].items.unshift({ url: fullUrl, thumb: thumbUrl, name: file.name });
             } catch (e) {
-                console.error("Upload failed", e);
+                console.error("Cloudinary Error:", e);
             }
         }
 
         save();
         display();
-        btn.innerText = "Upload to Cloud";
+        btn.innerText = originalText;
         btn.disabled = false;
         document.getElementById("fileInput").value = "";
+        document.getElementById("albumName").value = "";
     }
 
     function display() {
@@ -212,47 +248,52 @@
         let search = document.getElementById("search").value.toLowerCase();
         let html = '<div class="grid">';
 
-        for (let name in albums) {
-            let items = albums[name].items;
-            let match = name.toLowerCase().includes(search) || 
-                        items.some(i => i.name.toLowerCase().includes(search));
+        const keys = Object.keys(albums);
+        if (keys.length === 0) {
+            html = '<p style="text-align:center; color:#666; margin-top:40px;">No albums yet. Upload some memories!</p>';
+        } else {
+            for (let name in albums) {
+                let items = albums[name].items;
+                let match = name.toLowerCase().includes(search) || 
+                            items.some(i => i.name.toLowerCase().includes(search));
 
-            if (!match) continue;
+                if (!match) continue;
 
-            let first = items[0];
-            html += `
-                <div class="album-card">
-                    <div onclick="openAlbum('${name}')">
-                        <div class="thumb-container">
-                            ${first ? `<img src="${first.url}" loading="lazy">` : `<span style="font-size:2rem">📁</span>`}
+                let cover = items[0];
+                html += `
+                    <div class="album-card">
+                        <div onclick="openAlbum('${name}')">
+                            <div class="thumb-container">
+                                ${cover ? `<img src="${cover.thumb}" loading="lazy">` : `📁`}
+                            </div>
+                            <h3>${name}</h3>
+                            <p>${items.length} photos</p>
                         </div>
-                        <h3>${name}</h3>
-                        <p>${items.length} items</p>
-                    </div>
-                    <div class="action-btns">
-                        <button onclick="renameAlbum('${name}')">✏️</button>
-                        <button onclick="deleteAlbum('${name}')" style="background:rgba(255,0,0,0.2)">🗑️</button>
-                    </div>
-                </div>`;
+                        <div class="action-btns">
+                            <button onclick="renameAlbum('${name}')">✏️</button>
+                            <button onclick="deleteAlbum('${name}')">🗑️</button>
+                        </div>
+                    </div>`;
+            }
+            html += '</div>';
         }
-        html += '</div>';
         div.innerHTML = html;
     }
 
     function openAlbum(name) {
         let div = document.getElementById("albums");
         let html = `
-            <div class="container" style="margin-top:20px">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <button onclick="display()" style="width:auto; padding:8px 20px;">⬅ Back</button>
-                    <h2 style="margin:0">${name}</h2>
+            <div style="animation: fadeIn 0.3s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <button onclick="display()" style="width:auto; padding:10px 20px; background:rgba(255,255,255,0.1)">Back</button>
+                    <h2 style="margin:0; font-size:1.2rem;">${name}</h2>
                 </div>
-                <div class="grid" style="margin-top:20px; padding:0;">`;
+                <div class="grid" style="padding:0;">`;
 
         albums[name].items.forEach((item, i) => {
             html += `
                 <div class="photo-item">
-                    <img src="${item.url}" onclick="window.open('${item.url}', '_blank')">
+                    <img src="${item.thumb}" onclick="window.open('${item.url}', '_blank')">
                     <button class="del-btn" onclick="deleteItem('${name}',${i})">×</button>
                 </div>`;
         });
@@ -262,15 +303,16 @@
     }
 
     function deleteItem(name, i) {
-        if(confirm("Remove this photo?")) {
+        if(confirm("Delete this photo?")) {
             albums[name].items.splice(i, 1);
+            if (albums[name].items.length === 0) delete albums[name];
             save();
-            openAlbum(name);
+            albums[name] ? openAlbum(name) : display();
         }
     }
 
     function deleteAlbum(name) {
-        if (confirm(`Delete the entire "${name}" album?`)) {
+        if (confirm(`Delete entire album "${name}"?`)) {
             delete albums[name];
             save();
             display();
@@ -278,9 +320,9 @@
     }
 
     function renameAlbum(name) {
-        let newName = prompt("Enter new album name:", name);
-        if (newName && newName !== name) {
-            albums[newName] = albums[name];
+        let n = prompt("New name:", name);
+        if (n && n !== name) {
+            albums[n] = albums[name];
             delete albums[name];
             save();
             display();
