@@ -4,12 +4,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Memories</title>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff00cc">
+
 <style>
 body {
     margin: 0;
     font-family: Arial;
     background: radial-gradient(circle at top, #1a0033, #000);
     color: white;
+}
+
+/* SPLASH */
+#splash {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+#splash h1 {
+    color: #ff00cc;
+    text-shadow: 0 0 20px #ff00cc;
 }
 
 /* HEADER */
@@ -44,7 +63,7 @@ button {
     box-shadow: 0 0 15px #ff00cc;
 }
 
-/* CARD */
+/* ALBUM */
 .album {
     margin: 15px;
     padding: 15px;
@@ -53,24 +72,27 @@ button {
     box-shadow: 0 0 20px rgba(255,0,255,0.3);
 }
 
-/* IMAGE / VIDEO */
 .media {
     width: 100%;
     border-radius: 10px;
     margin-top: 10px;
 }
 
-/* DELETE BUTTON */
 .deleteBtn {
     background: red;
-    margin-top: 5px;
     padding: 8px;
+    margin-top: 5px;
     font-size: 12px;
 }
 </style>
 </head>
 
 <body>
+
+<!-- SPLASH -->
+<div id="splash">
+    <h1>📸 Memories</h1>
+</div>
 
 <h1>📸 My Private Memories</h1>
 
@@ -91,6 +113,13 @@ let albums = JSON.parse(localStorage.getItem("albums")) || {};
 function saveData(){
     localStorage.setItem("albums", JSON.stringify(albums));
 }
+
+/* SPLASH HIDE */
+window.onload = () => {
+    setTimeout(()=>{
+        document.getElementById("splash").style.display = "none";
+    }, 1500);
+};
 
 /* CREATE ALBUM */
 function createAlbum(){
@@ -147,6 +176,53 @@ function deleteItem(album, index){
     }
 }
 
+/* SLIDESHOW */
+function startSlideshow(album){
+    let items = albums[album];
+    if(!items || items.length === 0) return;
+
+    let index = 0;
+
+    let viewer = document.createElement("div");
+    viewer.style = `
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:black;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        z-index:9999;
+    `;
+
+    document.body.appendChild(viewer);
+
+    function show(){
+        viewer.innerHTML = "";
+
+        let item = items[index];
+
+        if(item.type === "image"){
+            viewer.innerHTML = `<img src="${item.url}" style="max-width:90%">`;
+        } else {
+            viewer.innerHTML = `<video src="${item.url}" autoplay controls style="max-width:90%"></video>`;
+        }
+
+        index++;
+        if(index >= items.length) index = 0;
+    }
+
+    show();
+    let interval = setInterval(show, 3000);
+
+    viewer.onclick = ()=>{
+        clearInterval(interval);
+        viewer.remove();
+    };
+}
+
 /* DISPLAY */
 function displayAlbums(){
     let container = document.getElementById("albums");
@@ -155,23 +231,7 @@ function displayAlbums(){
     for(let album in albums){
         let html = `<div class="album"><h3>${album}</h3>`;
 
+        html += `<button onclick="startSlideshow('${album}')">▶ Slideshow</button>`;
+
         albums[album].forEach((item, index)=>{
-            if(item.type === "image"){
-                html += `<img class="media" src="${item.url}">`;
-            } else {
-                html += `<video class="media" controls src="${item.url}"></video>`;
-            }
-
-            html += `<button class="deleteBtn" onclick="deleteItem('${album}', ${index})">Delete</button>`;
-        });
-
-        html += `</div>`;
-        container.innerHTML += html;
-    }
-}
-
-displayAlbums();
-</script>
-
-</body>
-</html>
+            if(item.type === "
