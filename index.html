@@ -3,310 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Memory Vault | Premium</title>
-    <link rel="manifest" href="manifest.json">
+    <title>AI Memory Vault</title>
     <style>
         :root {
-            --primary: #00f2ff;
-            --secondary: #7000ff;
-            --bg: #030008;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text: #ffffff;
+            --primary: #ff00cc;
+            --secondary: #3333ff;
+            --bg: #050010;
+            --card-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-main: #ffffff;
         }
 
         body {
-            margin: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            /* Animated Mesh Gradient */
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            background-attachment: fixed;
+            margin: 0; font-family: 'Inter', sans-serif;
+            background: var(--bg); color: var(--text-main);
+            padding-bottom: 80px; min-height: 100vh;
         }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: slideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
-
-        /* HEADER */
         .header {
-            position: sticky; top: 0; z-index: 1000;
-            background: rgba(3, 0, 8, 0.6);
-            backdrop-filter: blur(20px);
-            padding: 20px 0;
-            border-bottom: 1px solid var(--glass-border);
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(5, 0, 16, 0.8); backdrop-filter: blur(20px);
+            padding: 15px 0; border-bottom: 1px solid var(--glass-border);
             text-align: center;
         }
 
         .header h1 { 
-            margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: 3px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            margin: 0; font-size: 1.4rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
         }
 
-        .container { width: 92%; margin: 0 auto; max-width: 600px; padding: 20px 0; }
+        .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 15px; }
 
-        /* INPUTS & BUTTONS */
-        .glass-panel {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .settings-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 12px; border-radius: 15px;
+            margin-bottom: 15px; border: 1px solid var(--glass-border);
         }
 
         input {
-            width: 100%; margin-bottom: 12px; padding: 15px; border-radius: 15px;
-            border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3);
-            color: white; font-size: 1rem; outline: none; transition: 0.3s;
+            width: 100%; margin: 8px 0; padding: 14px; box-sizing: border-box;
+            border-radius: 12px; border: 1px solid var(--glass-border);
+            background: var(--card-bg); color: white; font-size: 16px;
         }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,242,255,0.2); }
 
         button {
-            width: 100%; padding: 15px; border-radius: 15px; border: none;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; font-weight: 700; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            width: 100%; margin: 10px 0; padding: 14px; border-radius: 12px;
+            border: none; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; font-weight: 600; cursor: pointer;
         }
-        button:active { transform: scale(0.97); }
 
-        /* CARDS */
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 10px;
-            position: relative;
-            transition: 0.4s;
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px 0; }
+        
+        .album-card {
+            background: var(--card-bg); border: 1px solid var(--glass-border);
+            border-radius: 18px; padding: 12px; text-align: center;
         }
-        .card:hover { transform: translateY(-5px); border-color: var(--primary); }
 
-        .img-box {
-            width: 100%; aspect-ratio: 1/1; border-radius: 18px;
-            overflow: hidden; background: #000; position: relative;
+        .thumb-container {
+            width: 100%; aspect-ratio: 1/1; background: #111;
+            border-radius: 12px; overflow: hidden; margin-bottom: 8px;
         }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* BUTTONS OVERLAY */
-        .fav-btn, .like-btn {
-            position: absolute; bottom: 10px; border: none; border-radius: 50%;
-            width: 35px; height: 35px; backdrop-filter: blur(5px); cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .fav-btn {
+            position: absolute; bottom: 8px; right: 8px;
+            background: rgba(0,0,0,0.6); border: none; border-radius: 50%;
+            width: 32px; height: 32px; color: white; cursor: pointer;
         }
-        .fav-btn { right: 10px; background: rgba(255, 0, 85, 0.2); color: #fff; }
-        .fav-btn.active { background: #ff0055; color: white; }
-        .like-btn { right: 50px; background: rgba(0, 242, 255, 0.2); color: #fff; }
-        .like-btn.active { background: var(--primary); color: #000; }
+        .fav-btn.active { color: #ff0055; }
 
-        /* SLIDESHOW OVERLAY */
-        #slideshow {
-            position: fixed; inset: 0; background: #000; z-index: 2000;
-            display: none; align-items: center; justify-content: center;
-        }
-        #slideImg { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        #lock {
-            position: fixed; inset: 0; background: var(--bg); z-index: 5000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        #lockScreen {
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
     </style>
 </head>
 <body>
 
-<div id="lock">
-    <div class="glass-panel" style="text-align:center; width:280px;">
-        <h2 style="font-weight:200; letter-spacing:5px;">LOCKED</h2>
-        <input id="pin" type="password" placeholder="PIN" style="text-align:center; letter-spacing:10px;">
-        <button onclick="unlock()">ACCESS VAULT</button>
-    </div>
-</div>
-
-<div id="slideshow">
-    <button onclick="stopShow()" style="position:absolute; top:20px; right:20px; width:50px;">✕</button>
-    <img id="slideImg">
+<div id="lockScreen">
+    <h1>🔐</h1>
+    <input id="pass" type="password" placeholder="PIN" style="width: 150px; text-align: center;">
+    <button onclick="unlock()" style="width: 150px;">Unlock</button>
 </div>
 
 <div class="header">
-    <h1>Memory Vault</h1>
+    <h1>📸 AI VAULT</h1>
 </div>
 
 <div class="container">
-    <div class="glass-panel fade-in">
-        <input id="search" placeholder="🔍 Search memories or tags..." oninput="display()">
-        <input id="albumName" list="album-list" placeholder="Target Album (e.g. Travel)">
-        <datalist id="album-list"></datalist>
-        <input type="file" id="fileInput" multiple style="background:none; border:none; padding:0;">
-        <button id="upBtn" onclick="upload(this)">UPLOAD TO CLOUD</button>
+    <div class="settings-bar">
+        <span>✍️ Watermark View</span>
+        <input type="checkbox" id="watermarkToggle" onchange="saveSettings()" style="width: 20px; margin: 0;">
     </div>
 
-    <div id="content"></div>
+    <input id="search" placeholder="🔍 Search tags or albums..." oninput="display()">
+    
+    <div style="background:var(--card-bg); padding:15px; border-radius:18px; border:1px solid var(--glass-border);">
+        <input id="albumName" list="album-list" placeholder="Target Album (e.g. Travel)">
+        <datalist id="album-list"></datalist>
+        <input type="file" id="fileInput" multiple>
+        <button id="uploadBtn" onclick="upload(this)">Cloud Upload</button>
+    </div>
+
+    <div id="albums"></div>
 </div>
 
 <script>
+    const PASSWORD = "1234";
     const CLOUD_NAME = "dzfssbg4j";
-    const PRESET = "memories_upload";
-    let albums = JSON.parse(localStorage.getItem("albums")) || {};
-    let slideTimer;
+    const UPLOAD_PRESET = "memories_upload";
 
-    function save() { localStorage.setItem("albums", JSON.stringify(albums)); }
+    let albums = JSON.parse(localStorage.getItem("albums")) || {};
+    let useWatermark = JSON.parse(localStorage.getItem("useWatermark")) || false;
+
+    function save() { 
+        localStorage.setItem("albums", JSON.stringify(albums)); 
+        updateDatalist();
+    }
+
+    function saveSettings() {
+        useWatermark = document.getElementById("watermarkToggle").checked;
+        localStorage.setItem("useWatermark", JSON.stringify(useWatermark));
+    }
 
     function unlock() {
-        if(document.getElementById("pin").value === "1234") {
-            document.getElementById("lock").style.display = "none";
+        if (document.getElementById("pass").value === PASSWORD) {
+            document.getElementById("lockScreen").style.display = "none";
+            document.getElementById("watermarkToggle").checked = useWatermark;
+            updateDatalist();
             display();
         } else { alert("Access Denied"); }
     }
 
+    function updateDatalist() {
+        const dl = document.getElementById("album-list");
+        dl.innerHTML = Object.keys(albums).map(name => `<option value="${name}">`).join('');
+    }
+
     async function upload(btn) {
         const files = document.getElementById("fileInput").files;
-        if (!files.length) return;
-        btn.innerText = "⚡ PROCESSING...";
+        if (files.length === 0) return alert("Please select a file first");
         
+        btn.innerText = "⏳ Uploading...";
+        btn.disabled = true;
+
         for (let file of files) {
-            let fd = new FormData();
-            fd.append("file", file);
-            fd.append("upload_preset", PRESET);
-            fd.append("categorization", "google_tagging");
+            let formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", UPLOAD_PRESET);
+            formData.append("categorization", "google_tagging");
 
             try {
-                let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: fd });
+                let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
                 let data = await res.json();
                 
-                let albumKey = document.getElementById("albumName").value || "General";
-                if(!albums[albumKey]) albums[albumKey] = { items: [] };
-                
-                albums[albumKey].items.unshift({
-                    url: data.secure_url,
-                    thumb: data.secure_url.replace('/upload/', '/upload/w_600,c_fill,g_auto,q_auto/'),
-                    tags: data.tags || [],
-                    fav: false,
-                    liked: false
-                });
-            } catch(e) { console.error(e); }
+                if(data.secure_url) {
+                    let albumKey = document.getElementById("albumName").value || "General";
+                    if (!albums[albumKey]) albums[albumKey] = { items: [] };
+                    
+                    albums[albumKey].items.unshift({ 
+                        url: data.secure_url, 
+                        thumb: data.secure_url.replace('/upload/', '/upload/w_500,c_fill/'), 
+                        tags: data.tags || [],
+                        fav: false
+                    });
+                }
+            } catch (e) { alert("Upload failed. Check your internet or Cloudinary settings."); }
         }
-        save(); btn.innerText = "UPLOAD TO CLOUD"; display();
+        save(); display();
+        btn.innerText = "Cloud Upload"; btn.disabled = false;
+        document.getElementById("fileInput").value = "";
     }
 
     function display() {
-        let root = document.getElementById("content");
+        let div = document.getElementById("albums");
         let search = document.getElementById("search").value.toLowerCase();
-        let html = '<div class="grid fade-in">';
+        let html = '<div class="grid">';
 
-        // Update Datalist
-        document.getElementById("album-list").innerHTML = Object.keys(albums).map(a => `<option value="${a}">`).join('');
-
-        // Favorites Special Collection
+        // 1. COLLECT FAVORITES
         let favs = [];
-        for(let a in albums) albums[a].items.forEach(i => { if(i.fav) favs.push(i); });
-        if(favs.length > 0 && !search) {
-            html += `<div class="card" onclick="openAlbum('Favorites', true)" style="grid-column: 1/-1; background:linear-gradient(45deg, #ff005533, transparent);">
-                <h3 style="margin:5px;">❤️ Your Favorites (${favs.length})</h3>
-            </div>`;
-        }
-
         for (let name in albums) {
-            let items = albums[name].items;
-            if(!name.toLowerCase().includes(search)) continue;
+            albums[name].items.forEach(item => { if(item.fav) favs.push(item); });
+        }
+        
+        // 2. SHOW FAVORITES AT THE TOP
+        if (favs.length > 0) {
+            html += `<div class="album-card" style="border-color:var(--primary)" onclick="openAlbum('Favorites', true)">
+                        <div class="thumb-container"><img src="${favs[0].thumb}"></div>
+                        <h3>❤️ Favorites</h3><p>${favs.length} items</p>
+                     </div>`;
+        }
 
+        // 3. SHOW OTHER ALBUMS
+        for (let name in albums) {
+            if (search && !name.toLowerCase().includes(search)) continue;
+            let cover = albums[name].items[0] ? albums[name].items[0].thumb : '';
             html += `
-                <div class="card">
-                    <div onclick="openAlbum('${name}')">
-                        <div class="img-box"><img src="${items[0].thumb}"></div>
-                        <h4 style="margin:10px 0 0 5px; text-transform:capitalize;">${name}</h4>
-                        <p style="margin:0 0 5px 5px; font-size:0.7rem; color:#888;">${items.length} Photos</p>
-                    </div>
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <button onclick="renameAlbum('${name}')" style="padding:5px; font-size:10px; background:var(--glass)">✏️</button>
-                        <button onclick="deleteAlbum('${name}')" style="padding:5px; font-size:10px; background:var(--glass)">🗑️</button>
-                    </div>
+                <div class="album-card" onclick="openAlbum('${name}', false)">
+                    <div class="thumb-container"><img src="${cover}" onerror="this.src='https://placehold.co/400x400?text=Empty'"></div>
+                    <h3>${name}</h3><p>${albums[name].items.length} items</p>
                 </div>`;
         }
-        root.innerHTML = html + '</div>';
+        div.innerHTML = html + '</div>';
     }
 
-    function openAlbum(name, isFavView = false) {
-        let root = document.getElementById("content");
+    function openAlbum(name, isFavView) {
+        let div = document.getElementById("albums");
         let items = isFavView ? [] : albums[name].items;
-        if(isFavView) for(let a in albums) albums[a].items.forEach(i => { if(i.fav) items.push(i); });
+        
+        if(isFavView) {
+            for (let n in albums) { albums[n].items.forEach(i => { if(i.fav) items.push(i); }); }
+        }
 
-        let html = `
-            <div class="fade-in">
-                <div style="display:flex; gap:10px; margin-bottom:20px;">
-                    <button onclick="display()" style="width:80px">⬅ BACK</button>
-                    <button onclick="startShow('${name}', ${isFavView})" style="background:var(--secondary)">▶ SLIDESHOW</button>
-                </div>
-                <h2 style="margin-bottom:20px; text-transform:uppercase;">${name}</h2>
-                <div class="grid">`;
-
-        items.forEach((img, i) => {
-            html += `
-                <div class="card">
-                    <div class="img-box">
-                        <img src="${img.thumb}" onclick="window.open('${img.url}')">
-                        <button class="like-btn ${img.liked ? 'active' : ''}" onclick="toggleStatus('${name}', ${i}, 'liked', ${isFavView})">👍</button>
-                        <button class="fav-btn ${img.fav ? 'active' : ''}" onclick="toggleStatus('${name}', ${i}, 'fav', ${isFavView})">❤️</button>
-                    </div>
-                </div>`;
+        let html = `<div><button onclick="display()" style="width:80px; margin-bottom:10px;">Back</button><h2>${name}</h2><div class="grid">`;
+        
+        items.forEach((item, i) => {
+            html += `<div class="photo-item">
+                <img src="${item.thumb}" onclick="viewImage('${item.url}')">
+                <button class="fav-btn ${item.fav ? 'active' : ''}" onclick="toggleFav('${name}', ${i}, ${isFavView})">❤️</button>
+            </div>`;
         });
-        root.innerHTML = html + '</div></div>';
+        div.innerHTML = html + `</div></div>`;
     }
 
-    function toggleStatus(album, index, key, isFavView) {
-        if(isFavView) {
-            let count = 0;
-            for(let a in albums) {
-                albums[a].items.forEach(item => {
-                    if(item.fav) {
-                        if(count === index) item[key] = !item[key];
-                        count++;
-                    }
+    function toggleFav(albumName, index, isFavView) {
+        if (isFavView) {
+            // Find the item in the actual albums to unfavorite it
+            for (let n in albums) {
+                albums[n].items.forEach(item => {
+                    // This is a simple match; for a real app, you'd use a unique ID
+                    if(item.fav) { /* toggle logic */ }
                 });
             }
+            alert("To remove from favorites, go to the original album!");
         } else {
-            albums[album].items[index][key] = !albums[album].items[index][key];
+            albums[albumName].items[index].fav = !albums[albumName].items[index].fav;
+            save(); openAlbum(albumName, false);
         }
-        save();
-        isFavView ? openAlbum('Favorites', true) : openAlbum(album);
     }
 
-    function startShow(name, isFav) {
-        let items = isFav ? [] : albums[name].items;
-        if(isFav) for(let a in albums) albums[a].items.forEach(i => { if(i.fav) items.push(i); });
-        
-        let overlay = document.getElementById("slideshow");
-        let img = document.getElementById("slideImg");
-        overlay.style.display = "flex";
-        
-        let idx = 0;
-        img.src = items[idx].url;
-        slideTimer = setInterval(() => {
-            idx = (idx + 1) % items.length;
-            img.style.opacity = 0;
-            setTimeout(() => {
-                img.src = items[idx].url;
-                img.style.opacity = 1;
-            }, 500);
-        }, 3500);
-    }
-
-    function stopShow() {
-        clearInterval(slideTimer);
-        document.getElementById("slideshow").style.display = "none";
-    }
-
-    function deleteAlbum(n) { if(confirm("Delete Album?")) { delete albums[n]; save(); display(); } }
-    function renameAlbum(old) {
-        let n = prompt("New name:", old);
-        if(n && n !== old) { albums[n] = albums[old]; delete albums[old]; save(); display(); }
+    function viewImage(url) {
+        let finalUrl = url;
+        if (useWatermark) {
+            finalUrl = url.replace('/upload/', `/upload/l_text:Arial_40_bold:© My Vault,co_white,g_south_east,x_20,y_20,o_50/`);
+        }
+        window.open(finalUrl, '_blank');
     }
 </script>
 </body>
