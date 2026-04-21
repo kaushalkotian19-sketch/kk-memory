@@ -1,258 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Memory Vault</title>
-    <style>
-        :root {
-            --primary: #ff00cc;
-            --secondary: #3333ff;
-            --bg: #050010;
-            --card-bg: rgba(255, 255, 255, 0.06);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --text-main: #ffffff;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Memory Vault</title>
 
-        body {
-            margin: 0; font-family: 'Inter', sans-serif;
-            background: var(--bg); color: var(--text-main);
-            padding-bottom: 80px; min-height: 100vh;
-        }
+<style>
+:root {
+    --primary: #ff00cc;
+    --secondary: #3333ff;
+    --bg-color: #050010;
+    --accent-glow: rgba(188, 19, 254, 0.2);
+    --card-bg: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --text-main: #ffffff;
+}
 
-        .header {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(5, 0, 16, 0.8); backdrop-filter: blur(20px);
-            padding: 15px 0; border-bottom: 1px solid var(--glass-border);
-            text-align: center;
-        }
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle at top right, var(--accent-glow), transparent 70%);
+    background-attachment: fixed;
+    transition: background 1.5s ease-in-out;
+    color: var(--text-main);
+}
 
-        .header h1 { 
-            margin: 0; font-size: 1.4rem;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+.header {
+    position: sticky;
+    top: 0;
+    background: rgba(5,0,16,0.8);
+    padding: 15px;
+    text-align: center;
+}
 
-        .container { width: 92%; margin: 0 auto; max-width: 600px; padding-top: 15px; }
+.container {
+    width: 92%;
+    margin: auto;
+    padding-top: 10px;
+}
 
-        .settings-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--card-bg); padding: 12px; border-radius: 15px;
-            margin-bottom: 15px; border: 1px solid var(--glass-border);
-        }
+input, button {
+    width: 100%;
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+}
 
-        input {
-            width: 100%; margin: 8px 0; padding: 14px; box-sizing: border-box;
-            border-radius: 12px; border: 1px solid var(--glass-border);
-            background: var(--card-bg); color: white; font-size: 16px;
-        }
+button {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+}
 
-        button {
-            width: 100%; margin: 10px 0; padding: 14px; border-radius: 12px;
-            border: none; background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; font-weight: 600; cursor: pointer;
-        }
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 10px;
+}
 
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px 0; }
-        
-        .album-card {
-            background: var(--card-bg); border: 1px solid var(--glass-border);
-            border-radius: 18px; padding: 12px; text-align: center;
-        }
+.album-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+}
 
-        .thumb-container {
-            width: 100%; aspect-ratio: 1/1; background: #111;
-            border-radius: 12px; overflow: hidden; margin-bottom: 8px;
-        }
-        .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-container {
+    aspect-ratio: 1;
+    overflow: hidden;
+}
 
-        .photo-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; }
-        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .fav-btn {
-            position: absolute; bottom: 8px; right: 8px;
-            background: rgba(0,0,0,0.6); border: none; border-radius: 50%;
-            width: 32px; height: 32px; color: white; cursor: pointer;
-        }
-        .fav-btn.active { color: #ff0055; }
+.thumb-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-        #lockScreen {
-            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-    </style>
+#lockScreen {
+    position: fixed;
+    inset: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+</style>
 </head>
+
 <body>
 
 <div id="lockScreen">
-    <h1>🔐</h1>
-    <input id="pass" type="password" placeholder="PIN" style="width: 150px; text-align: center;">
-    <button onclick="unlock()" style="width: 150px;">Unlock</button>
+<h2>🔐</h2>
+<input id="pass" type="password">
+<button onclick="unlock()">Unlock</button>
 </div>
 
-<div class="header">
-    <h1>📸 AI VAULT</h1>
-</div>
+<div class="header"><h1>📸 AI VAULT</h1></div>
 
 <div class="container">
-    <div class="settings-bar">
-        <span>✍️ Watermark View</span>
-        <input type="checkbox" id="watermarkToggle" onchange="saveSettings()" style="width: 20px; margin: 0;">
-    </div>
+<input id="search" placeholder="Search..." oninput="display()">
+<input id="albumName" placeholder="Album name">
 
-    <input id="search" placeholder="🔍 Search tags or albums..." oninput="display()">
-    
-    <div style="background:var(--card-bg); padding:15px; border-radius:18px; border:1px solid var(--glass-border);">
-        <input id="albumName" list="album-list" placeholder="Target Album (e.g. Travel)">
-        <datalist id="album-list"></datalist>
-        <input type="file" id="fileInput" multiple>
-        <button id="uploadBtn" onclick="upload(this)">Cloud Upload</button>
-    </div>
+<input type="file" id="fileInput" multiple>
+<button onclick="upload(this)">Upload</button>
 
-    <div id="albums"></div>
+<div id="albums"></div>
 </div>
 
 <script>
-    const PASSWORD = "1234";
-    const CLOUD_NAME = "dzfssbg4j";
-    const UPLOAD_PRESET = "memories_upload";
+const PASSWORD="1234";
+const CLOUD_NAME="dzfssbg4j";
+const UPLOAD_PRESET="memories_upload";
 
-    let albums = JSON.parse(localStorage.getItem("albums")) || {};
-    let useWatermark = JSON.parse(localStorage.getItem("useWatermark")) || false;
+let albums=JSON.parse(localStorage.getItem("albums"))||{};
 
-    function save() { 
-        localStorage.setItem("albums", JSON.stringify(albums)); 
-        updateDatalist();
-    }
+function save(){
+localStorage.setItem("albums",JSON.stringify(albums));
+}
 
-    function saveSettings() {
-        useWatermark = document.getElementById("watermarkToggle").checked;
-        localStorage.setItem("useWatermark", JSON.stringify(useWatermark));
-    }
+/* 🌅 TIME THEME */
+function applyTimeTheme(){
+let h=new Date().getHours();
+let root=document.documentElement.style;
 
-    function unlock() {
-        if (document.getElementById("pass").value === PASSWORD) {
-            document.getElementById("lockScreen").style.display = "none";
-            document.getElementById("watermarkToggle").checked = useWatermark;
-            updateDatalist();
-            display();
-        } else { alert("Access Denied"); }
-    }
+if(h>=6 && h<11){
+root.setProperty('--bg-color','#1a0b2e');
+root.setProperty('--accent-glow','rgba(255,140,180,0.3)');
+}
+else if(h>=11 && h<17){
+root.setProperty('--bg-color','#001529');
+root.setProperty('--accent-glow','rgba(0,210,255,0.3)');
+}
+else{
+root.setProperty('--bg-color','#050010');
+root.setProperty('--accent-glow','rgba(188,19,254,0.2)');
+}
+}
 
-    function updateDatalist() {
-        const dl = document.getElementById("album-list");
-        dl.innerHTML = Object.keys(albums).map(name => `<option value="${name}">`).join('');
-    }
+/* 🎨 VIBRANT */
+function extractVibrantColor(url){
+document.documentElement.style.setProperty('--accent-glow','rgba(255,255,255,0.15)');
+}
 
-    async function upload(btn) {
-        const files = document.getElementById("fileInput").files;
-        if (files.length === 0) return alert("Please select a file first");
-        
-        btn.innerText = "⏳ Uploading...";
-        btn.disabled = true;
+/* LOCK */
+function unlock(){
+if(document.getElementById("pass").value===PASSWORD){
+document.getElementById("lockScreen").style.display="none";
+applyTimeTheme();
+display();
+}else alert("Wrong password");
+}
 
-        for (let file of files) {
-            let formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", UPLOAD_PRESET);
-            formData.append("categorization", "google_tagging");
+/* UPLOAD */
+async function upload(btn){
+let files=document.getElementById("fileInput").files;
+if(files.length===0) return;
 
-            try {
-                let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
-                let data = await res.json();
-                
-                if(data.secure_url) {
-                    let albumKey = document.getElementById("albumName").value || "General";
-                    if (!albums[albumKey]) albums[albumKey] = { items: [] };
-                    
-                    albums[albumKey].items.unshift({ 
-                        url: data.secure_url, 
-                        thumb: data.secure_url.replace('/upload/', '/upload/w_500,c_fill/'), 
-                        tags: data.tags || [],
-                        fav: false
-                    });
-                }
-            } catch (e) { alert("Upload failed. Check your internet or Cloudinary settings."); }
-        }
-        save(); display();
-        btn.innerText = "Cloud Upload"; btn.disabled = false;
-        document.getElementById("fileInput").value = "";
-    }
+btn.innerText="Uploading...";
+btn.disabled=true;
 
-    function display() {
-        let div = document.getElementById("albums");
-        let search = document.getElementById("search").value.toLowerCase();
-        let html = '<div class="grid">';
+for(let f of files){
+let fd=new FormData();
+fd.append("file",f);
+fd.append("upload_preset",UPLOAD_PRESET);
 
-        // 1. COLLECT FAVORITES
-        let favs = [];
-        for (let name in albums) {
-            albums[name].items.forEach(item => { if(item.fav) favs.push(item); });
-        }
-        
-        // 2. SHOW FAVORITES AT THE TOP
-        if (favs.length > 0) {
-            html += `<div class="album-card" style="border-color:var(--primary)" onclick="openAlbum('Favorites', true)">
-                        <div class="thumb-container"><img src="${favs[0].thumb}"></div>
-                        <h3>❤️ Favorites</h3><p>${favs.length} items</p>
-                     </div>`;
-        }
+let res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,{
+method:"POST",
+body:fd
+});
 
-        // 3. SHOW OTHER ALBUMS
-        for (let name in albums) {
-            if (search && !name.toLowerCase().includes(search)) continue;
-            let cover = albums[name].items[0] ? albums[name].items[0].thumb : '';
-            html += `
-                <div class="album-card" onclick="openAlbum('${name}', false)">
-                    <div class="thumb-container"><img src="${cover}" onerror="this.src='https://placehold.co/400x400?text=Empty'"></div>
-                    <h3>${name}</h3><p>${albums[name].items.length} items</p>
-                </div>`;
-        }
-        div.innerHTML = html + '</div>';
-    }
+let data=await res.json();
 
-    function openAlbum(name, isFavView) {
-        let div = document.getElementById("albums");
-        let items = isFavView ? [] : albums[name].items;
-        
-        if(isFavView) {
-            for (let n in albums) { albums[n].items.forEach(i => { if(i.fav) items.push(i); }); }
-        }
+let album=document.getElementById("albumName").value || "General";
 
-        let html = `<div><button onclick="display()" style="width:80px; margin-bottom:10px;">Back</button><h2>${name}</h2><div class="grid">`;
-        
-        items.forEach((item, i) => {
-            html += `<div class="photo-item">
-                <img src="${item.thumb}" onclick="viewImage('${item.url}')">
-                <button class="fav-btn ${item.fav ? 'active' : ''}" onclick="toggleFav('${name}', ${i}, ${isFavView})">❤️</button>
-            </div>`;
-        });
-        div.innerHTML = html + `</div></div>`;
-    }
+if(!albums[album]) albums[album]={items:[]};
 
-    function toggleFav(albumName, index, isFavView) {
-        if (isFavView) {
-            // Find the item in the actual albums to unfavorite it
-            for (let n in albums) {
-                albums[n].items.forEach(item => {
-                    // This is a simple match; for a real app, you'd use a unique ID
-                    if(item.fav) { /* toggle logic */ }
-                });
-            }
-            alert("To remove from favorites, go to the original album!");
-        } else {
-            albums[albumName].items[index].fav = !albums[albumName].items[index].fav;
-            save(); openAlbum(albumName, false);
-        }
-    }
+albums[album].items.unshift({
+url:data.secure_url
+});
+}
 
-    function viewImage(url) {
-        let finalUrl = url;
-        if (useWatermark) {
-            finalUrl = url.replace('/upload/', `/upload/l_text:Arial_40_bold:© My Vault,co_white,g_south_east,x_20,y_20,o_50/`);
-        }
-        window.open(finalUrl, '_blank');
-    }
+save();
+display();
+
+btn.innerText="Upload";
+btn.disabled=false;
+}
+
+/* DISPLAY */
+function display(){
+applyTimeTheme();
+
+let div=document.getElementById("albums");
+let search=document.getElementById("search").value.toLowerCase();
+
+let html='<div class="grid">';
+
+for(let name in albums){
+
+if(search && !name.toLowerCase().includes(search)) continue;
+
+let first=albums[name].items[0];
+
+html+=`
+<div class="album-card" onclick="openAlbum('${name}')">
+<div class="thumb-container">
+${first?`<img src="${first.url}">`:"No Image"}
+</div>
+<h3>${name}</h3>
+<p>${albums[name].items.length} items</p>
+</div>
+`;
+}
+
+html+='</div>';
+div.innerHTML=html;
+}
+
+/* OPEN */
+function openAlbum(name){
+let first=albums[name].items[0]?.url;
+extractVibrantColor(first);
+
+let div=document.getElementById("albums");
+
+let html=`<button onclick="display()">⬅ Back</button><h2>${name}</h2>`;
+
+albums[name].items.forEach(item=>{
+html+=`<img src="${item.url}" style="width:100%;margin-top:10px">`;
+});
+
+div.innerHTML=html;
+}
 </script>
+
 </body>
 </html>
