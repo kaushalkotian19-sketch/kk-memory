@@ -115,6 +115,21 @@
     <img id="slideshowImg">
 </div>
 
+ <!-- IMAGE EDITOR -->
+<div id="editorOverlay">
+    <button onclick="closeEditor()" style="position:absolute; top:20px; right:20px; width:40px; background:none; color:white; font-size:30px;">×</button>
+    
+    <img id="editorImg" src="">
+    
+    <div class="edit-controls">
+        <button class="edit-btn" onclick="enhancePhoto()">✨ AI Enhance</button>
+        <button class="edit-btn" onclick="cropSquare()">✂️ Square Crop</button>
+        <button class="edit-btn" onclick="applyBW()">🎬 B&W</button>
+    </div>
+    
+    <button class="save-btn" onclick="downloadPhoto()">💾 Download</button>
+</div>
+    
 <div class="header">
     <h1>📸 AI MEMORY VAULT</h1>
 </div>
